@@ -46,7 +46,10 @@ jobs:
           FIREBASE_SENDER_ID: ${{ secrets.FIREBASE_SENDER_ID }}
         run: |
           VERSAO="${GITHUB_REF_NAME#v}"
-          ./gradlew assembleRelease -PversionName="$VERSAO" -PversionCode="${{ github.run_number }}"
+          # versionCode sai da tag (v1.2.3 -> 10203), sempre crescente e maior que os builds locais.
+          IFS=. read -r MAIOR MENOR CORRECAO <<< "${VERSAO%%-*}"
+          CODIGO=$(( ${MAIOR:-0} * 10000 + ${MENOR:-0} * 100 + ${CORRECAO:-0} ))
+          ./gradlew assembleRelease -PversionName="$VERSAO" -PversionCode="$CODIGO"
           mv app/build/outputs/apk/release/app-release.apk "rivais-do-lar-$VERSAO.apk"
 
       - name: Changelog desde a última tag
