@@ -106,7 +106,7 @@ class AuthViewModel @Inject constructor(
         }
     }
 
-    fun criarCasa(nome: String) = rodarCasa { casa.criarCasa(nome) }
+    fun criarCasa(nome: String, exemplos: Boolean) = rodarCasa { casa.criarCasa(nome, exemplos) }
 
     fun entrarCasa(codigo: String) = rodarCasa { casa.entrarCasa(codigo) }
 

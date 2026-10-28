@@ -29,3 +29,10 @@ content_path = "./supabase/templates/confirmacao.html"
 [auth.email.template.recovery]
 subject = "Código para criar uma senha nova"
 content_path = "./supabase/templates/recuperacao.html"
+
+# Chamadas pelo pg_net com o segredo CRON_SECRET (não por usuários logados).
+[functions.enviar-push]
+verify_jwt = false
+
+[functions.limpar-fotos]
+verify_jwt = false

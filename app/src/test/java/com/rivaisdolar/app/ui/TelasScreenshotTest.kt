@@ -13,7 +13,17 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.test.junit4.v2.createComposeRule
 import androidx.compose.ui.unit.dp
 import com.github.takahirom.roborazzi.captureRoboImage
+import com.rivaisdolar.app.data.model.Carta
 import com.rivaisdolar.app.data.model.Casa
+import com.rivaisdolar.app.data.model.Conquista
+import com.rivaisdolar.app.data.model.Notificacao
+import com.rivaisdolar.app.data.model.Previa
+import com.rivaisdolar.app.data.model.TipoCarta
+import com.rivaisdolar.app.data.model.Troca
+import com.rivaisdolar.app.data.remote.Historico
+import com.rivaisdolar.app.ui.historico.HistoricoConteudo
+import com.rivaisdolar.app.ui.tarefas.FolhaAtividade
+import com.rivaisdolar.app.ui.tarefas.FolhaUsarCarta
 import com.rivaisdolar.app.data.model.Multiplicador
 import com.rivaisdolar.app.data.model.Registro
 import com.rivaisdolar.app.data.model.Tarefa
@@ -73,7 +83,7 @@ class TelasScreenshotTest {
 
     private val registro = Registro(
         "r1", "c", "t0", "bia", "Limpar o fogão", 65,
-        listOf(Multiplicador("bomba", "Bomba · parada há 1 dia", 1.1)), 70, 7, "pendente",
+        listOf(Multiplicador("bomba", "Bomba · parada há 1 dia", 1.1)), 70, 7, status = "pendente",
         criadoEm = iso(agora.minus(Duration.ofMinutes(40))),
     )
 
@@ -92,12 +102,54 @@ class TelasScreenshotTest {
             placar = mapOf("vitor" to 1410, "bia" to 1335), aposta = "Você escolhe o restaurante", metaAlvo = 2000,
             metaAtual = 2745, metaPremio = "pizza", vencedor = "vitor", encerrada = true),
         atualizadoEm = 0,
+        cartas = listOf(
+            Carta("k1", "c", "vitor", "dobradinha", "rara", iso(agora)),
+            Carta("k2", "c", "vitor", "veto", "epica", iso(agora)),
+            Carta("k3", "c", "bia", "hora_feliz", "epica", iso(agora.minus(Duration.ofDays(1))), usadaEm = iso(agora.minus(Duration.ofHours(5)))),
+        ),
+        trocas = listOf(Troca("x1", "c", "bia", "vitor", "t5", "t2", "pendente", criadaEm = iso(agora.minus(Duration.ofHours(1))))),
+        conquistas = listOf(
+            Conquista("vitor", "primeira_faxina", iso(agora)), Conquista("bia", "primeira_faxina", iso(agora)),
+            Conquista("vitor", "madrugador", iso(agora)), Conquista("bia", "rei_do_rejunte", iso(agora)),
+        ),
+        notificacoes = listOf(
+            Notificacao("n1", "virada", "Virada no placar", "Bia passou na frente com Limpar banheiro.", criadaEm = iso(agora.minus(Duration.ofMinutes(12)))),
+            Notificacao("n2", "bomba", "Limpar banheiro virou bomba", "Parada há 1 dia: agora vale mais, e sobe a cada dia.", criadaEm = iso(agora.minus(Duration.ofHours(3))), lidaEm = iso(agora)),
+        ),
+    )
+
+    private val historico = Historico(
+        temporadas = listOf(
+            Temporada("s3", "c", 3, iso(agora), iso(agora), mapOf("vitor" to 980, "bia" to 1120), vencedor = "bia", encerrada = true),
+            Temporada("s4", "c", 4, iso(agora), iso(agora), mapOf("vitor" to 1310, "bia" to 1205), vencedor = "vitor", encerrada = true),
+            Temporada("s5", "c", 5, iso(agora), iso(agora), mapOf("vitor" to 1150, "bia" to 1290), vencedor = "bia", encerrada = true),
+            Temporada("s6", "c", 6, iso(agora), iso(agora), mapOf("vitor" to 1410, "bia" to 1335), vencedor = "vitor", encerrada = true),
+        ),
+        registrosDaSemana = (0..2).flatMap { d ->
+            listOf(
+                Registro("rv$d", "c", "t1", "vitor", "x", 0, emptyList(), listOf(220, 400, 380)[d], 0, status = "validado", criadoEm = iso(agora.minus(Duration.ofDays(2L - d)))),
+                Registro("rb$d", "c", "t1", "bia", "x", 0, emptyList(), listOf(310, 330, 260)[d], 0, status = "validado", criadoEm = iso(agora.minus(Duration.ofDays(2L - d)))),
+            )
+        },
     )
 
     private val acoes = object : AcoesJogo {
         override fun reservar(t: Tarefa, ok: () -> Unit) = Unit
         override fun liberar(t: Tarefa, ok: () -> Unit) = Unit
-        override fun concluir(t: Tarefa, ok: () -> Unit) = Unit
+        override fun concluir(t: Tarefa, foto: ByteArray?, ok: () -> Unit) = Unit
+        override suspend fun previa(t: Tarefa) = Previa(
+            40,
+            listOf(Multiplicador("sequencia", "Sequência de 4 dias", 1.2), Multiplicador("dobradinha", "Carta Dobradinha", 2.0)),
+            95,
+            9,
+        )
+        override suspend fun foto(caminho: String): ByteArray? = null
+        override fun removerTarefa(id: String, ok: () -> Unit) = Unit
+        override fun comprar(tipo: TipoCarta, ok: () -> Unit) = Unit
+        override fun usarCarta(carta: Carta, alvo: String?, alvo2: String?, ok: () -> Unit) = Unit
+        override fun responderTroca(troca: Troca, aceitar: Boolean, ok: () -> Unit) = Unit
+        override fun recusasNaSemana() = 0
+        override fun marcarLidas() = Unit
         override fun validar(r: Registro, ok: () -> Unit) = Unit
         override fun contestar(r: Registro, comentario: String, ok: () -> Unit) = Unit
         override fun definirMeta(alvo: Int, premio: String, ok: () -> Unit) = Unit
@@ -166,6 +218,25 @@ class TelasScreenshotTest {
 
     @Test
     fun cartas() = capturar("6-cartas") {
-        Principal(Aba.Cartas) { CartasTela(snapshot, rememberLazyListState()) }
+        Principal(Aba.Cartas) { CartasTela(snapshot, agora, rememberLazyListState(), false, {}, {}) }
+    }
+
+    @Test
+    fun usarTroca() = capturar("7-usar-veto") {
+        Principal(Aba.Cartas, folha = { FolhaUsarCarta(snapshot.cartas[1], snapshot, agora, acoes, false) {} }) {
+            CartasTela(snapshot, agora, rememberLazyListState(), false, {}, {})
+        }
+    }
+
+    @Test
+    fun atividade() = capturar("8-atividade") {
+        Principal(Aba.Placar, folha = { FolhaAtividade(snapshot, agora, acoes, {}, {}, {}) }) {
+            PlacarTela(snapshot, agora, false, 0, rememberLazyListState(), {}, {}, {}, {}, {})
+        }
+    }
+
+    @Test
+    fun historicoTela() = capturar("9-historico") {
+        RivaisTema(Cores.Azul) { HistoricoConteudo(snapshot.copy(temporada = snapshot.temporada?.copy(inicio = iso(agora.minus(Duration.ofDays(2))))), historico, {}, agora) }
     }
 }

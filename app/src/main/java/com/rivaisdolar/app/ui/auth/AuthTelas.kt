@@ -39,6 +39,7 @@ import com.rivaisdolar.app.ui.components.BotaoCirculo
 import com.rivaisdolar.app.ui.components.BotaoTexto
 import com.rivaisdolar.app.ui.components.CampoTexto
 import com.rivaisdolar.app.ui.components.CartaoSolido
+import com.rivaisdolar.app.ui.components.Interruptor
 import com.rivaisdolar.app.ui.components.Secao
 import com.rivaisdolar.app.ui.components.Simbolo
 import com.rivaisdolar.app.ui.components.Texto
@@ -191,6 +192,7 @@ fun SemCasaTela(vm: AuthViewModel = hiltViewModel()) {
     val ui by vm.ui.collectAsStateWithLifecycle()
     var nome by rememberSaveable { mutableStateOf("") }
     var codigo by rememberSaveable { mutableStateOf("") }
+    var exemplos by rememberSaveable { mutableStateOf(true) }
     TelaFormulario("Sua casa", "O jogo acontece entre duas pessoas na mesma casa.") {
         Secao("Entrar com código")
         CartaoSolido {
@@ -203,9 +205,16 @@ fun SemCasaTela(vm: AuthViewModel = hiltViewModel()) {
         Secao("Ou criar uma casa nova", Modifier.padding(top = 8.dp))
         CartaoSolido {
             Column(Modifier.padding(14.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
-                Texto("Você recebe um código para convidar a outra pessoa. A casa já vem com tarefas de exemplo.", Tipo.pequenoSecundario)
+                Texto("Você recebe um código para convidar a outra pessoa. Depois vocês criam as próprias tarefas.", Tipo.pequenoSecundario)
                 CampoTexto(nome, { nome = it.take(40) }, "Nome da casa (ex.: Apê da Vila)")
-                BotaoCapsula("Criar casa", { vm.criarCasa(nome) }, habilitado = nome.isNotBlank(), carregando = ui.carregando)
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    Column(Modifier.weight(1f)) {
+                        Texto("Começar com tarefas de exemplo", Tipo.linha)
+                        Texto("Louça, banheiro, lixo, mercado... Dá pra editar ou remover depois.", Tipo.subtitulo)
+                    }
+                    Interruptor(exemplos, { exemplos = it })
+                }
+                BotaoCapsula("Criar casa", { vm.criarCasa(nome, exemplos) }, habilitado = nome.isNotBlank(), carregando = ui.carregando)
             }
         }
         Mensagens(ui)

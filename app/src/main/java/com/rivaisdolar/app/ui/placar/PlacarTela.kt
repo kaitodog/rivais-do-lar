@@ -4,7 +4,19 @@ import android.content.Intent
 import androidx.compose.animation.core.animateIntAsState
 import androidx.compose.animation.core.snap
 import androidx.compose.animation.core.tween
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.runtime.key
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.layout.boundsInRoot
+import androidx.compose.ui.layout.onGloballyPositioned
+import androidx.compose.ui.layout.positionInRoot
+import com.rivaisdolar.app.data.model.Troca
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
@@ -73,9 +85,21 @@ fun PlacarTela(
     aoNotificacoes: () -> Unit,
     aoCasa: () -> Unit,
     aoMeta: () -> Unit,
+    aoTroca: (Troca) -> Unit = {},
+    aoCartas: () -> Unit = {},
 ) {
     val pendentes = s.pendentesParaMim
     val hoje = tarefasDeHoje(s, agora)
+    val (moedasExibidas, voos) = rememberChegadaDeMoedas(s.eu?.moedas ?: 0)
+    var destino by remember { mutableStateOf(Offset.Zero) }
+    var raiz by remember { mutableStateOf(Offset.Zero) }
+    var tamanho by remember { mutableStateOf(Offset.Zero) }
+    Box(
+        Modifier.fillMaxSize().onGloballyPositioned {
+            raiz = it.positionInRoot()
+            tamanho = Offset(it.size.width.toFloat(), it.size.height.toFloat())
+        },
+    ) {
     LazyColumn(
         state = lista,
         modifier = Modifier.statusBarsPadding(),
@@ -83,13 +107,32 @@ fun PlacarTela(
         verticalArrangement = Arrangement.spacedBy(14.dp),
     ) {
         item {
-            Row(Modifier.fillMaxWidth().height(38.dp), horizontalArrangement = Arrangement.spacedBy(8.dp, Alignment.End)) {
-                BotaoCirculo("notifications", "Pedidos de validação", aoNotificacoes, marcador = if (pendentes.isNotEmpty()) Cores.Alerta else null)
+            Row(Modifier.fillMaxWidth().height(38.dp), horizontalArrangement = Arrangement.spacedBy(8.dp), verticalAlignment = Alignment.CenterVertically) {
+                ContadorMoedas(
+                    moedasExibidas,
+                    Modifier.toque(aoTocar = aoCartas).onGloballyPositioned { destino = it.boundsInRoot().center },
+                )
+                Spacer(Modifier.weight(1f))
+                val avisos = pendentes.isNotEmpty() || s.naoLidas > 0 || s.trocaParaMim != null
+                BotaoCirculo("notifications", "Atividade", aoNotificacoes, marcador = if (avisos) Cores.Alerta else null)
                 BotaoCirculo("person", "Casa e perfil", aoCasa)
             }
         }
         item { TituloGrande("Placar", subtituloTemporada(s.temporada, agora)) }
         item { CartaoPlacar(s) }
+        if (temEfeitos(s, agora)) item { Efeitos(s, agora) }
+        s.trocaParaMim?.let { tr ->
+            item {
+                CartaoSolido(Modifier.toque { aoTroca(tr) }) {
+                    Linha(
+                        titulo = "${s.jogador(tr.propostaPor)?.nome ?: "A outra pessoa"} quer trocar",
+                        subtitulo = "${s.tarefas.firstOrNull { it.id == tr.tarefaMinha }?.titulo} pela sua ${s.tarefas.firstOrNull { it.id == tr.tarefaDele }?.titulo}",
+                        inicio = { IconeTarefa("swap_horiz") },
+                        seta = true,
+                    )
+                }
+            }
+        }
         if (s.outro == null) item { CartaoConvite(s.casa.codigoConvite) }
         item { CartaoMeta(s, aoMeta) }
         if (s.casa.modoTregua) {
@@ -149,6 +192,16 @@ fun PlacarTela(
                 )
             }
         }
+    }
+    if (voos > 0) {
+        key(voos) {
+            VooDeMoedas(
+                origem = Offset(tamanho.x / 2, tamanho.y * 0.42f),
+                destino = destino - raiz,
+                quantidade = 7,
+            )
+        }
+    }
     }
 }
 
@@ -232,6 +285,38 @@ private fun LadoPlacar(j: Jogador?, pontos: Int, naFrente: Boolean, modifier: Mo
         Texto(animado.pt(), Tipo.placar, cor = if (j == null) Cores.TextoTerciario else Cores.Texto)
         Box(Modifier.height(18.dp)) {
             if (naFrente && j != null) Selo("Na frente", Cores.jogador(j.cor))
+        }
+    }
+}
+
+private fun temEfeitos(s: CasaSnapshot, agora: Instant) =
+    s.jogadores.any { it.dobradinha || it.horaFelizAte?.instanteOuNull()?.isAfter(agora) == true }
+
+/** Cartas em efeito agora (as minhas e as da outra pessoa). */
+@Composable
+private fun Efeitos(s: CasaSnapshot, agora: Instant) {
+    val formato = java.time.format.DateTimeFormatter.ofPattern("HH:mm")
+    val zona = runCatching { java.time.ZoneId.of(s.casa.fuso) }.getOrDefault(java.time.ZoneId.systemDefault())
+    val chips = buildList {
+        s.jogadores.forEach { j ->
+            val meu = j.userId == s.meuId
+            if (j.dobradinha) add(Triple("library_add", if (meu) "Dobradinha armada: a próxima vale x2" else "${j.nome} armou a Dobradinha", false))
+            j.horaFelizAte?.instanteOuNull()?.takeIf { it.isAfter(agora) }?.let {
+                add(Triple("hourglass_empty", (if (meu) "Sua Hora Feliz" else "Hora Feliz de ${j.nome}") + " até " + it.atZone(zona).format(formato), true))
+            }
+        }
+    }
+    if (chips.isEmpty()) return
+    androidx.compose.foundation.layout.FlowRow(horizontalArrangement = Arrangement.spacedBy(8.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
+        chips.forEach { (icone, texto, ouro) ->
+            Row(
+                Modifier.clip(androidx.compose.foundation.shape.CircleShape).background(Cores.Superficie).padding(horizontal = 12.dp, vertical = 7.dp),
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.spacedBy(6.dp),
+            ) {
+                Simbolo(icone, tamanho = 15.sp, cor = if (ouro) Cores.Ouro else Cores.Texto)
+                Texto(texto, Tipo.pequeno.copy(fontSize = 12.sp))
+            }
         }
     }
 }

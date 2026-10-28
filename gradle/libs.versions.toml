@@ -15,6 +15,9 @@ ktor = "3.6.0"
 haze = "2.0.1"
 serialization = "1.12.0"
 junit = "4.13.2"
+firebaseBom = "35.1.0"
+glance = "1.2.0"
+exif = "1.4.2"
 robolectric = "4.17"
 roborazzi = "1.77.0"
 
@@ -49,6 +52,10 @@ haze = { module = "dev.chrisbanes.haze:haze", version.ref = "haze" }
 haze-blur = { module = "dev.chrisbanes.haze:haze-blur", version.ref = "haze" }
 kotlinx-serialization-json = { module = "org.jetbrains.kotlinx:kotlinx-serialization-json", version.ref = "serialization" }
 junit = { module = "junit:junit", version.ref = "junit" }
+firebase-bom = { module = "com.google.firebase:firebase-bom", version.ref = "firebaseBom" }
+firebase-messaging = { module = "com.google.firebase:firebase-messaging" }
+glance-appwidget = { module = "androidx.glance:glance-appwidget", version.ref = "glance" }
+androidx-exifinterface = { module = "androidx.exifinterface:exifinterface", version.ref = "exif" }
 robolectric = { module = "org.robolectric:robolectric", version.ref = "robolectric" }
 roborazzi = { module = "io.github.takahirom.roborazzi:roborazzi", version.ref = "roborazzi" }
 roborazzi-compose = { module = "io.github.takahirom.roborazzi:roborazzi-compose", version.ref = "roborazzi" }

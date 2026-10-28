@@ -1,3 +1,4 @@
 <resources>
     <string name="app_name">Rivais do Lar</string>
+    <string name="widget_descricao">Placar da temporada</string>
 </resources>

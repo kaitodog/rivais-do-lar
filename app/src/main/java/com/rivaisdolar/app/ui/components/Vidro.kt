@@ -17,7 +17,11 @@ import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.ColorFilter
 import androidx.compose.ui.graphics.ColorMatrix
+import androidx.compose.ui.graphics.Outline
 import androidx.compose.ui.graphics.Shape
+import androidx.compose.ui.geometry.Size
+import androidx.compose.ui.platform.LocalDensity
+import androidx.compose.ui.platform.LocalLayoutDirection
 import androidx.compose.ui.unit.dp
 import com.rivaisdolar.app.ui.theme.Cores
 import com.rivaisdolar.app.ui.theme.LocalVidroReal
@@ -77,23 +81,47 @@ fun GlassSurface(
     }
     val brilho = if (tinta != null) 0.45f else 0.14f
 
+    val densidade = LocalDensity.current
+    val direcao = LocalLayoutDirection.current
     Box(
         modifier = modifier
             .then(if (sombra) Modifier.shadow(14.dp, shape, clip = false, ambientColor = Color.Black, spotColor = Color.Black) else Modifier)
-            .clip(shape)
-            .then(haze?.takeIf { borrar }?.let { Modifier.hazeBlur(HazeInput.Sources(it), estiloBlur) } ?: Modifier)
-            .background(cor)
-            .drawBehind {
-                drawRect(
-                    Brush.radialGradient(
-                        listOf(Color.White.copy(alpha = brilho), Color.Transparent),
-                        center = Offset(size.width * 0.3f, 0f),
-                        radius = maxOf(size.width, size.height) * 0.6f,
-                    ),
-                )
-            }
-            .border(1.dp, bordaEspecular, shape),
+            .clip(shape),
         contentAlignment = alinhamento,
-        content = conteudo,
-    )
+    ) {
+        // Camada de fundo: blur do que está atrás, com a lente AGSL na borda (Android 13+).
+        Box(
+            Modifier
+                .matchParentSize()
+                .then(
+                    if (haze != null && podeBorrar) {
+                        Modifier
+                            .lenteDeVidro(
+                                raioPx = { w, h ->
+                                    when (val o = shape.createOutline(Size(w, h), direcao, densidade)) {
+                                        is Outline.Rounded -> o.roundRect.topLeftCornerRadius.x
+                                        else -> 0f
+                                    }
+                                },
+                                bordaPx = with(densidade) { 10.dp.toPx() },
+                            )
+                            .hazeBlur(HazeInput.Sources(haze), estiloBlur)
+                    } else {
+                        Modifier
+                    },
+                )
+                .background(cor)
+                .drawBehind {
+                    drawRect(
+                        Brush.radialGradient(
+                            listOf(Color.White.copy(alpha = brilho), Color.Transparent),
+                            center = Offset(size.width * 0.3f, 0f),
+                            radius = maxOf(size.width, size.height) * 0.6f,
+                        ),
+                    )
+                }
+                .border(1.dp, bordaEspecular, shape),
+        )
+        conteudo()
+    }
 }

@@ -37,7 +37,15 @@ import com.rivaisdolar.app.ui.tarefas.FolhaConcluir
 import com.rivaisdolar.app.ui.tarefas.FolhaDetalhe
 import com.rivaisdolar.app.ui.tarefas.FolhaFiltro
 import com.rivaisdolar.app.ui.tarefas.FolhaMeta
+import com.rivaisdolar.app.ui.tarefas.FolhaTroca
+import com.rivaisdolar.app.ui.tarefas.FolhaUsarCarta
 import com.rivaisdolar.app.ui.tarefas.FolhaValidar
+import com.rivaisdolar.app.push.Push
+import android.Manifest
+import android.os.Build
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.contract.ActivityResultContracts
+import androidx.compose.ui.platform.LocalContext
 import com.rivaisdolar.app.ui.tarefas.TarefasTela
 import com.rivaisdolar.app.ui.theme.Cores
 import com.rivaisdolar.app.ui.theme.Tipo
@@ -51,6 +59,8 @@ private sealed interface Folha {
     data object Atividade : Folha
     data object Meta : Folha
     data object Filtro : Folha
+    data class Troca(val trocaId: String) : Folha
+    data class UsarCarta(val cartaId: String) : Folha
 }
 
 @Composable
@@ -84,6 +94,16 @@ fun PrincipalTela(
         }
     }
     val haze = rememberHazeState()
+    val context = LocalContext.current
+
+    // Android 13+: pede para mostrar notificações (só se este APK tem push configurado).
+    val permissao = rememberLauncherForActivityResult(ActivityResultContracts.RequestPermission()) { }
+    LaunchedEffect(snapshot?.eu?.provocacao) {
+        val nivel = snapshot?.eu?.provocacao ?: return@LaunchedEffect
+        if (Push.configurado && nivel != "desligada" && !Push.permitido(context) && Build.VERSION.SDK_INT >= 33) {
+            permissao.launch(Manifest.permission.POST_NOTIFICATIONS)
+        }
+    }
 
     LaunchedEffect(snapshot?.ultimaEncerrada?.id) {
         vm.temporadaNaoVista()?.let { aoFimTemporada(it.id) }
@@ -112,6 +132,8 @@ fun PrincipalTela(
                     aoNotificacoes = { folha = Folha.Atividade },
                     aoCasa = aoCasa,
                     aoMeta = { folha = Folha.Meta },
+                    aoTroca = { folha = Folha.Troca(it.id) },
+                    aoCartas = { aba = Aba.Cartas },
                 )
                 Aba.Tarefas -> TarefasTela(
                     s = s,
@@ -124,7 +146,14 @@ fun PrincipalTela(
                         folha = if (pendente != null && pendente.userId != s.meuId) Folha.Validar(pendente.id) else Folha.Detalhe(t.id)
                     },
                 )
-                Aba.Cartas -> CartasTela(s, listas.getValue(Aba.Cartas))
+                Aba.Cartas -> CartasTela(
+                    s = s,
+                    agora = agora,
+                    lista = listas.getValue(Aba.Cartas),
+                    ocupado = ocupado,
+                    aoUsar = { folha = Folha.UsarCarta(it.id) },
+                    aoComprar = { vm.comprar(it) },
+                )
             }
         }
 
@@ -175,7 +204,17 @@ fun PrincipalTela(
                             FolhaValidar(r, s, agora, vm, ocupado, fechar)
                         }
                     }
-                    Folha.Atividade -> FolhaAtividade(s, agora, fechar) { folha = Folha.Validar(it.id) }
+                    Folha.Atividade -> FolhaAtividade(s, agora, vm, fechar, { folha = Folha.Validar(it.id) }, { folha = Folha.Troca(it.id) })
+                    is Folha.Troca -> {
+                        val tr = s.trocas.firstOrNull { it.id == f.trocaId }
+                        if (tr == null || tr.status != "pendente") Texto("Essa troca já foi resolvida.", Tipo.pequenoSecundario)
+                        else FolhaTroca(tr, s, vm, ocupado, fechar)
+                    }
+                    is Folha.UsarCarta -> {
+                        val c = s.cartas.firstOrNull { it.id == f.cartaId && it.usadaEm == null }
+                        if (c == null) Texto("Essa carta não está mais na sua mão.", Tipo.pequenoSecundario)
+                        else FolhaUsarCarta(c, s, agora, vm, ocupado, fechar)
+                    }
                     Folha.Meta -> FolhaMeta(s, vm, ocupado, fechar)
                     Folha.Filtro -> FolhaFiltro(s, categoria, {
                         categoria = it

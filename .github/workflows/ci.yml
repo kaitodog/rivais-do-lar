@@ -35,6 +35,21 @@ jobs:
           name: apk-debug
           path: app/build/outputs/apk/debug/*.apk
 
+  edge-functions:
+    name: Edge Functions (Deno)
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: supabase/functions
+    steps:
+      - uses: actions/checkout@v4
+      - uses: denoland/setup-deno@v2
+        with:
+          deno-version: v2.x
+      - run: deno check enviar-push/index.ts limpar-fotos/index.ts _shared/google.ts
+      - run: deno lint
+      - run: deno test _shared/
+
   supabase:
     name: Banco (lint e testes SQL)
     runs-on: ubuntu-latest

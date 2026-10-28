@@ -35,6 +35,7 @@ import com.rivaisdolar.app.ui.components.CabecalhoFolha
 import com.rivaisdolar.app.ui.components.FolhaVidro
 import com.rivaisdolar.app.ui.components.Girando
 import com.rivaisdolar.app.ui.components.Texto
+import com.rivaisdolar.app.ui.historico.HistoricoTela
 import com.rivaisdolar.app.ui.principal.JogoViewModel
 import com.rivaisdolar.app.ui.principal.PrincipalTela
 import com.rivaisdolar.app.ui.tarefas.EditorTarefaTela
@@ -48,6 +49,7 @@ import kotlinx.serialization.Serializable
 @Serializable private object RotaCasa
 @Serializable private data class RotaEditor(val id: String? = null)
 @Serializable private data class RotaFimTemporada(val id: String)
+@Serializable private object RotaHistorico
 
 @Composable
 fun RivaisRaiz(vm: RaizViewModel = hiltViewModel()) {
@@ -119,9 +121,11 @@ private fun Jogo(aoProcurarAtualizacao: () -> Unit) {
                 aoVoltar = { nav.popBackStack() },
                 aoEditarTarefa = { nav.navigate(RotaEditor(it)) },
                 aoUltimaTemporada = { nav.navigate(RotaFimTemporada(it)) },
+                aoHistorico = { nav.navigate(RotaHistorico) },
                 aoProcurarAtualizacao = aoProcurarAtualizacao,
             )
         }
+        composable<RotaHistorico> { HistoricoTela(jogo) { nav.popBackStack() } }
         composable<RotaEditor> { entrada ->
             EditorTarefaTela(jogo, entrada.toRoute<RotaEditor>().id) { nav.popBackStack() }
         }

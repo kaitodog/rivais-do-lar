@@ -8,25 +8,43 @@ App Android nativo (Kotlin + Jetpack Compose) com backend no Supabase. O visual 
 [`docs/conceito.html`](docs/conceito.html) (iOS 26 / Liquid Glass, tema preto) e as regras estão em
 [`docs/PLANO.md`](docs/PLANO.md).
 
-## Estado: Fase 1 (MVP)
+## O que tem
 
+**Base (Fase 1)**
 - Contas com e-mail e senha, confirmação e "esqueci minha senha" por código de 6 dígitos, sessão persistente.
-- Criar casa e entrar por código de convite (máximo 2 jogadores, cada um com sua cor).
-- Cadastro e edição de tarefas (minutos, esforço, chatice, categoria, ícone, recorrência, prazo).
+- Criar casa (com ou sem tarefas de exemplo) e entrar por código de convite: 2 jogadores, cada um com sua cor.
+- Tarefas próprias: nome, categoria (prontas ou inventadas por vocês), ícone, minutos, esforço, chatice,
+  recorrência e prazo. Dá para editar e remover a qualquer hora (o histórico de pontos fica).
 - Reservar → concluir → validar ou contestar (máximo 2 por semana); sem resposta em 12h vale sozinho.
-- Pontos, moedas, XP, placar e meta da casa calculados só no servidor (funções `security definer`);
-  as políticas RLS e os grants impedem o app de gravar esses campos.
-- Placar ao vivo nos dois celulares (Supabase Realtime), cache offline com Room e fila de ações
-  feitas sem internet.
-- Temporada semanal: fecha domingo 22h (fuso da casa), define vencedor, abre a próxima. Aposta e
-  resgate do prêmio. Tela de fim de temporada.
-- Crons (`pg_cron`): fechar temporadas, contar dias de tarefa bomba, liberar reservas paradas há 24h,
-  validar pendentes há 12h.
-- Atualização pelo GitHub Releases: o app confere o último release ao abrir e oferece baixar e instalar.
+- Placar ao vivo nos dois celulares (Realtime), cache offline (Room) e fila de ações feitas sem internet.
+- Temporada semanal (fecha domingo 22h), aposta, resgate do prêmio e tela de fim de temporada.
+- Atualização pelo GitHub Releases dentro do app.
 
-Ficam para a Fase 2: notificações FCM, foto do depois, roubo com bônus de 25%, sequência, recuperação,
-teto diário e efeito do modo trégua (o interruptor já grava a escolha). Cartas, conquistas, histórico
-e widget são da Fase 3.
+**Fase 2**
+- Tarefa bomba (+10% por dia de atraso, teto x2) e aviso quando vira bomba.
+- Roubo: reserva parada 24h volta para a fila, quem largou perde a sequência e quem pegar ganha +25%;
+  aviso 1h antes.
+- Sequência (+5% por dia seguido, até x1,3), teto diário de 400 pontos, recuperação (mais de 20% atrás
+  ganha moedas em dobro), meta da casa com aviso ao bater, modo trégua (placar pausa, conta só a meta).
+- Notificações em 3 níveis (desligada, moderada, sem piedade) com tom de narrador implicante:
+  virada, pedido de validação, bomba, roubável em 1h, fim de temporada, trocas e cartas. Sempre aparecem
+  no sino do app; o push no celular vai pelo FCM (Edge Function `enviar-push`).
+- Foto do depois (câmera ou galeria) no bucket privado `fotos`, mostrada na validação e apagada após
+  30 dias (Edge Function `limpar-fotos`).
+- Extrato do sheet de concluir calculado pelo servidor (`previa_conclusao`), igual ao que será gravado.
+- Barra de abas que encolhe ao rolar.
+
+**Fase 3**
+- Loja e mão de cartas (até 3, uma por dia): Holofote, Escudo, Troca (com proposta, 1 recusa por
+  semana, aceita sozinha em 12h), Dobradinha, Hora Feliz e Veto.
+- Níveis (a cada 1.000 XP) e 13 conquistas, como Rei do Rejunte e Madrugador.
+- Histórico com gráficos: pontos por temporada e a semana dia a dia, com toque para ler e visão em tabela.
+- Widget do placar na tela inicial.
+
+**Detalhes visuais**
+- Vidro com refração na borda via shader AGSL (Android 13+), por cima do blur do Haze.
+- Moedas voando até o contador quando os pontos entram; pontos sobem rolando; vibração ao concluir e validar.
+- Tudo respeita "remover animações" e cai para vidro simples abaixo do Android 12 ou na economia de bateria.
 
 ## Estrutura
 
@@ -41,8 +59,9 @@ app/                      app Android (pacote com.rivaisdolar.app)
     ui/...                telas: placar, tarefas, sheets, fim de temporada, casa, editor, login
   src/test/               fórmula x grade do servidor, modelos, versões e capturas de tela (Robolectric)
 supabase/
-  migrations/             schema, regras (RPCs), RLS e crons
-  tests/database/         testes pgTAP (fórmula, fluxo completo, RLS)
+  migrations/             schema, regras (RPCs), RLS, crons e as Fases 2 e 3
+  functions/              Edge Functions (Deno): enviar-push e limpar-fotos
+  tests/database/         testes pgTAP (fórmula, fluxo, RLS, Fase 2, cartas)
   seed.sql                duas contas e uma casa de exemplo para o Supabase local
 .github/workflows/        ci.yml (build, testes, db lint, pgTAP) e release.yml (APK assinado por tag)
 ```
@@ -64,6 +83,38 @@ supabase/
 4. Pegue a **Project URL** e a chave **anon / publishable** em **Project Settings → API**.
    A chave `service_role` nunca vai para o app.
 
+### Push, fotos e rotinas (Fase 2)
+
+O banco chama as Edge Functions pelo `pg_net`, com o endereço e um segredo guardados no Vault.
+
+1. Ative a extensão **pg_net** em **Database → Extensions**.
+2. Publique as funções:
+   ```bash
+   supabase functions deploy enviar-push --no-verify-jwt
+   ```
+   ```bash
+   supabase functions deploy limpar-fotos --no-verify-jwt
+   ```
+3. Escolha um segredo longo qualquer e guarde nos dois lados:
+   ```bash
+   supabase secrets set CRON_SECRET=<segredo>
+   ```
+   No **SQL Editor**:
+   ```sql
+   select vault.create_secret('https://<ref>.supabase.co', 'rivais_url');
+   select vault.create_secret('<segredo>', 'rivais_cron_secret');
+   ```
+4. Push no celular (opcional; sem isso as notificações ficam só no sino do app):
+   - crie um projeto no [Firebase](https://console.firebase.google.com) e adicione um app Android com o
+     pacote `com.rivaisdolar.app`;
+   - em **Configurações do projeto → Contas de serviço**, gere uma chave privada (JSON) e rode
+     `supabase secrets set FCM_SERVICE_ACCOUNT="$(cat conta-de-servico.json)"`;
+   - guarde `FIREBASE_APP_ID` (mobilesdk_app_id), `FIREBASE_API_KEY` (current_key),
+     `FIREBASE_PROJECT_ID` e `FIREBASE_SENDER_ID` (project_number) do `google-services.json` no
+     `local.properties` e nos secrets do GitHub. O app não usa o `google-services.json` em si.
+
+O bucket `fotos` e as políticas de acesso são criados pela migração.
+
 ## 2. Rodar no computador
 
 Crie `local.properties` na raiz (fica fora do git):
@@ -72,6 +123,11 @@ Crie `local.properties` na raiz (fica fora do git):
 sdk.dir=/caminho/do/Android/Sdk
 SUPABASE_URL=https://<ref>.supabase.co
 SUPABASE_ANON_KEY=<chave anon>
+# opcionais, só para push:
+FIREBASE_APP_ID=
+FIREBASE_API_KEY=
+FIREBASE_PROJECT_ID=
+FIREBASE_SENDER_ID=
 ```
 
 ```bash
@@ -124,6 +180,7 @@ Em **Settings → Secrets and variables → Actions**, crie:
 | `KEY_PASSWORD` | senha da chave |
 | `SUPABASE_URL` | URL do projeto |
 | `SUPABASE_ANON_KEY` | chave anon |
+| `FIREBASE_APP_ID`, `FIREBASE_API_KEY`, `FIREBASE_PROJECT_ID`, `FIREBASE_SENDER_ID` | opcionais, para push |
 
 Para publicar uma versão:
 
@@ -140,7 +197,8 @@ O workflow `release.yml` compila o APK assinado e cria o release com o changelog
 e oferece a versão nova. A API só enxerga releases de repositórios públicos; num repositório privado
 a verificação simplesmente não encontra nada.
 
-O `ci.yml` roda em todo push e PR: testes do app, APK de debug, `supabase db lint` e os testes pgTAP.
+O `ci.yml` roda em todo push e PR: testes do app, APK de debug, checagem e testes das Edge Functions,
+`supabase db lint` e os testes pgTAP.
 
 ## 5. Instalar nos dois celulares
 
@@ -151,9 +209,11 @@ O `ci.yml` roda em todo push e PR: testes do app, APK de debug, `supabase db lin
 
 ## Testes
 
-- `supabase/tests/database`: 73 asserções pgTAP. Fórmula (`20 min, médio, 1,3 = 40`;
-  `45 min, pesado, 1,5 = 135`), fluxo completo com crons e fechamento, e RLS: o cliente não altera
-  moedas, XP, nível, placar, meta, vencedor, registros, reservas nem bônus bomba, e não enxerga outra casa.
+- `supabase/tests/database`: 137 asserções pgTAP. Fórmula (`20 min, médio, 1,3 = 40`;
+  `45 min, pesado, 1,5 = 135`), fluxo completo com crons e fechamento, RLS (o cliente não altera moedas,
+  XP, placar, meta, registros, reservas, cartas, efeitos nem trocas, e não enxerga outra casa), regras
+  da Fase 2 (sequência, roubo, teto, recuperação, trégua, meta, níveis de notificação) e as seis cartas.
+- `supabase/functions/_shared`: assinatura do JWT da conta de serviço do Google e formato das mensagens.
 - `app/src/test`: a fórmula do app comparada com 5.544 combinações calculadas pelo Postgres
   (`resources/pontos_servidor.csv`, gerada por `supabase/tests/gerar_grade_pontos.sql`), leitura dos
   formatos do PostgREST, comparação de versões e capturas das telas em `app/build/outputs/roborazzi`.

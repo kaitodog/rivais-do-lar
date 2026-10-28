@@ -62,15 +62,21 @@ import java.time.LocalDate
 import java.time.ZoneId
 import java.time.format.DateTimeFormatter
 
-private val categorias = listOf("Cozinha", "Limpeza", "Pesada", "Rápida", "Lavanderia", "Pets", "Rua", "Carga mental", "Outros")
+private val categoriasPadrao = listOf("Cozinha", "Limpeza", "Pesada", "Rápida", "Lavanderia", "Pets", "Rua", "Carga mental", "Crianças", "Contas", "Manutenção")
 
+// Agrupados por assunto (6 por linha no seletor).
 private val icones = listOf(
-    "restaurant", "kitchen", "cooking", "soup_kitchen", "countertops",
-    "cleaning_services", "mop", "bathtub", "wash", "sanitizer",
-    "delete", "delete_sweep", "local_laundry_service", "checkroom", "dry_cleaning",
-    "iron", "bed", "window", "pets", "potted_plant",
-    "yard", "shopping_cart", "grocery", "edit_note", "receipt_long",
-    "plumbing", "build", "directions_car", "child_care", "inventory_2",
+    "restaurant", "kitchen", "cooking", "soup_kitchen", "countertops", "local_dining",
+    "dishwasher_gen", "microwave", "coffee_maker", "blender", "cleaning_services", "mop",
+    "vacuum", "bathtub", "shower", "wc", "wash", "sanitizer",
+    "delete", "delete_sweep", "recycling", "compost", "local_laundry_service", "laundry",
+    "checkroom", "dry_cleaning", "iron", "styler", "dry", "bed",
+    "king_bed", "window", "blinds", "chair", "weekend", "lightbulb",
+    "pets", "cruelty_free", "potted_plant", "yard", "grass", "water_drop",
+    "shopping_cart", "shopping_basket", "grocery", "local_shipping", "package_2", "mail",
+    "edit_note", "receipt_long", "payments", "credit_card", "savings", "calendar_month",
+    "child_care", "child_friendly", "toys", "backpack", "school", "medication",
+    "plumbing", "build", "handyman", "format_paint", "directions_car", "local_car_wash",
 )
 
 private enum class Prazo(val rotulo: String, val dias: Long?) {
@@ -88,6 +94,10 @@ fun EditorTarefaTela(vm: JogoViewModel, tarefaId: String?, aoFechar: () -> Unit)
 
     var titulo by rememberSaveable { mutableStateOf(original?.titulo.orEmpty()) }
     var categoria by rememberSaveable { mutableStateOf(original?.categoria ?: "Limpeza") }
+    var categoriaPropria by rememberSaveable { mutableStateOf(false) }
+    var removendo by rememberSaveable { mutableStateOf(false) }
+    // Categorias padrão + as que a casa já inventou.
+    val categorias = (categoriasPadrao + s.tarefas.map { it.categoria } + listOfNotNull(original?.categoria)).distinct()
     var icone by rememberSaveable { mutableStateOf(original?.icone ?: "cleaning_services") }
     var minutos by rememberSaveable { mutableFloatStateOf((original?.minutos ?: 20).toFloat()) }
     var esforco by rememberSaveable { mutableIntStateOf(original?.esforco ?: 1) }
@@ -138,7 +148,22 @@ fun EditorTarefaTela(vm: JogoViewModel, tarefaId: String?, aoFechar: () -> Unit)
             CartaoSolido { Box(Modifier.padding(horizontal = 16.dp, vertical = 12.dp)) { Deslizador(chatice, 1f..1.6f, 0.1f, { chatice = it }) } }
 
             Secao("Categoria")
-            Fichas(categorias, categorias.indexOf(categoria), { categoria = categorias[it] })
+            Fichas(
+                categorias + "Outra…",
+                if (categoriaPropria) categorias.size else categorias.indexOf(categoria),
+                {
+                    if (it == categorias.size) {
+                        categoriaPropria = true
+                        categoria = ""
+                    } else {
+                        categoriaPropria = false
+                        categoria = categorias[it]
+                    }
+                },
+            )
+            if (categoriaPropria) {
+                CampoTexto(categoria, { categoria = it.take(30) }, "Nome da categoria (ex.: Horta, Carro, Bebê)")
+            }
 
             Secao("Ícone")
             CartaoSolido {
@@ -185,15 +210,26 @@ fun EditorTarefaTela(vm: JogoViewModel, tarefaId: String?, aoFechar: () -> Unit)
                     }
                     vm.salvarTarefa(
                         original?.id,
-                        TarefaCadastro(titulo.trim(), categoria, icone, minutos.toInt(), esforco, chat, recorrencia, novoPrazo),
+                        TarefaCadastro(titulo.trim(), categoria.trim(), icone, minutos.toInt(), esforco, chat, recorrencia, novoPrazo),
                         aoFechar,
                     )
                 },
-                habilitado = titulo.isNotBlank(),
+                habilitado = titulo.isNotBlank() && categoria.isNotBlank(),
                 carregando = ocupado,
             )
-            if (original != null) {
-                BotaoTexto("Arquivar tarefa", { vm.arquivarTarefa(original.id, aoFechar) }, Modifier.align(Alignment.CenterHorizontally), cor = Cores.TextoSecundario)
+            if (original != null && removendo) {
+                CartaoSolido {
+                    Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(10.dp)) {
+                        Texto("Remover \"${original.titulo}\"?", Tipo.tituloCartao)
+                        Texto("Ela sai da lista da casa. Os pontos que já valeram continuam no placar e no histórico.", Tipo.pequenoSecundario)
+                        Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceEvenly) {
+                            BotaoTexto("Cancelar", { removendo = false }, cor = Cores.TextoSecundario)
+                            BotaoTexto("Remover", { vm.removerTarefa(original.id, aoFechar) }, habilitado = !ocupado)
+                        }
+                    }
+                }
+            } else if (original != null) {
+                BotaoTexto("Remover tarefa", { removendo = true }, Modifier.align(Alignment.CenterHorizontally), cor = Cores.TextoSecundario)
                 if (original.status != "livre") {
                     Texto(
                         "Ela está reservada ou esperando validação; mudanças valem para a próxima vez.",

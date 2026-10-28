@@ -32,12 +32,23 @@ fun Tarefa.prazoInstante(): Instant? = prazo?.instanteOuNull()
 
 fun Tarefa.bomba(agora: Instant): Boolean = diasParada > 0 || prazoInstante()?.isBefore(agora) == true
 
-/** Reserva vale 24h; depois disso o servidor devolve a tarefa para a fila. */
+/** Reserva vale 24h (ou até o fim do Escudo); depois o servidor devolve a tarefa para a fila. */
 fun Tarefa.roubavelEm(agora: Instant): Duration? {
     if (status != "reservada") return null
     val desde = reservadaEm?.instanteOuNull() ?: return null
-    return Duration.between(agora, desde.plus(Duration.ofHours(24))).takeIf { !it.isNegative }
+    val fim = maxOf(desde.plus(Duration.ofHours(24)), escudoAte?.instanteOuNull() ?: desde)
+    return Duration.between(agora, fim).takeIf { !it.isNegative }
 }
+
+fun Tarefa.comEscudo(agora: Instant): Boolean = escudoAte?.instanteOuNull()?.isAfter(agora) == true
+
+fun Tarefa.vetadaPor(agora: Instant): String? = vetadaPor?.takeIf { vetadaAte?.instanteOuNull()?.isAfter(agora) == true }
+
+/** Tarefa que o Veto vai pegar: a mais chata (empate: a que vale mais), como no servidor. */
+fun alvoDoVeto(s: CasaSnapshot, agora: Instant): Tarefa? =
+    s.tarefas.filter { it.vetadaPor(agora) == null && it.status != "aguardando" }
+        .sortedWith(compareByDescending<Tarefa> { it.chatice }.thenByDescending { Pontuacao.pontos(it.minutos, it.esforco, it.chatice) })
+        .firstOrNull()
 
 fun Tarefa.venceHoje(agora: Instant, fuso: String): Boolean {
     val p = prazoInstante() ?: return false
@@ -56,19 +67,29 @@ fun legenda(t: Tarefa, s: CasaSnapshot, agora: Instant, doPlacar: Boolean): Lege
             if (reg?.userId == s.meuId) Legenda("Aguardando $outroNome validar")
             else Legenda("${s.jogador(reg?.userId)?.nome ?: outroNome} concluiu · toque pra validar")
         }
+        t.vetadaPor(agora) == s.meuId -> Legenda("Vetada por você nesta temporada")
+        t.vetadaPor(agora) != null && t.status == "livre" -> Legenda("${s.jogador(t.vetadaPor)?.nome ?: outroNome} vetou · sobrou pra você")
         t.bomba(agora) -> Legenda(
             if (t.diasParada > 0) "Bomba · parada há ${plural(t.diasParada, "dia", "dias")}" else "Atrasada · vira bomba amanhã",
             Cores.Alerta,
         )
         t.status == "reservada" && t.reservadaPor == s.meuId -> {
             val resta = t.roubavelEm(agora)
-            Legenda(if (resta != null && resta < Duration.ofHours(6)) "Reservada por você · libera em ${resta.curta()}" else "Reservada por você")
+            when {
+                t.comEscudo(agora) -> Legenda("Reservada por você · com Escudo")
+                resta != null && resta < Duration.ofHours(6) -> Legenda("Reservada por você · libera em ${resta.curta()}")
+                else -> Legenda("Reservada por você")
+            }
         }
         t.status == "reservada" -> {
             val resta = t.roubavelEm(agora)
-            if (doPlacar || resta == null) Legenda("Reservada por ${s.jogador(t.reservadaPor)?.nome ?: outroNome}")
-            else Legenda("Roubável em ${resta.curta()}", Cores.Alerta)
+            when {
+                t.comEscudo(agora) -> Legenda("Reservada por ${s.jogador(t.reservadaPor)?.nome ?: outroNome} · com Escudo")
+                doPlacar || resta == null -> Legenda("Reservada por ${s.jogador(t.reservadaPor)?.nome ?: outroNome}")
+                else -> Legenda("Roubável em ${resta.curta()}", Cores.Alerta)
+            }
         }
+        t.roubadaDe != null && t.roubadaDe != s.meuId -> Legenda("Largada por ${s.jogador(t.roubadaDe)?.nome ?: outroNome} · vale +25%")
         else -> {
             val prefixo = if (doPlacar) "Livre" else t.categoria
             val vence = if (t.venceHoje(agora, s.casa.fuso)) " · vence hoje" else ""

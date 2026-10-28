@@ -28,7 +28,10 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import android.provider.Settings
+import androidx.compose.foundation.layout.Column
 import com.rivaisdolar.app.BuildConfig
+import com.rivaisdolar.app.push.Push
 import com.rivaisdolar.app.domain.pt
 import com.rivaisdolar.app.ui.components.Aviso
 import com.rivaisdolar.app.ui.components.Avatar
@@ -71,6 +74,7 @@ fun CasaTela(
     aoVoltar: () -> Unit,
     aoEditarTarefa: (String?) -> Unit,
     aoUltimaTemporada: (String) -> Unit,
+    aoHistorico: () -> Unit,
     aoProcurarAtualizacao: () -> Unit,
 ) {
     val snapshot by vm.snapshot.collectAsStateWithLifecycle()
@@ -164,6 +168,14 @@ fun CasaTela(
                         seta = true,
                         aoTocar = { edicao = Edicao.Aposta },
                     )
+                    Divisoria()
+                    Linha(
+                        titulo = "Histórico e conquistas",
+                        subtitulo = "Temporadas anteriores, semana dia a dia e títulos",
+                        inicio = { IconeTarefa("bar_chart") },
+                        seta = true,
+                        aoTocar = aoHistorico,
+                    )
                     s.ultimaEncerrada?.let { t ->
                         Divisoria()
                         Linha(
@@ -177,10 +189,19 @@ fun CasaTela(
                 }
             }
 
-            item { Secao("Tarefas da casa", Modifier.padding(top = 4.dp)) }
+            item {
+                Column(Modifier.padding(top = 4.dp)) {
+                    Secao("Tarefas da casa")
+                    Texto(
+                        "Crie as tarefas do jeito de vocês. Toque numa tarefa para editar ou remover.",
+                        Tipo.subtitulo,
+                        Modifier.padding(start = 16.dp, end = 16.dp, bottom = 6.dp),
+                    )
+                }
+            }
             item {
                 Grupo {
-                    Linha("Nova tarefa", inicio = { IconeTarefa("add") }, aoTocar = { aoEditarTarefa(null) })
+                    Linha("Criar tarefa", subtitulo = "Nome, categoria, ícone, tempo e chatice", inicio = { IconeTarefa("add") }, seta = true, aoTocar = { aoEditarTarefa(null) })
                     s.tarefas.sortedBy { it.titulo }.forEach { t ->
                         Divisoria()
                         Linha(
@@ -206,13 +227,29 @@ fun CasaTela(
                                 niveis.indexOfFirst { it.first == eu?.provocacao }.coerceAtLeast(0),
                                 { vm.definirProvocacao(niveis[it].first) },
                             )
-                            Texto("As notificações chegam na próxima versão; sua escolha já fica guardada.", Tipo.subtitulo)
+                            Texto(
+                                when (eu?.provocacao) {
+                                    "desligada" -> "Nada de push. As novidades ficam só no sino do placar."
+                                    "sem_piedade" -> "Tudo: viradas, bombas, reservas quase roubáveis e cartas, no tom mais implicante."
+                                    else -> "O essencial: viradas, pedidos de validação, trocas e fim de temporada."
+                                },
+                                Tipo.subtitulo,
+                            )
+                            if (!Push.configurado) {
+                                Texto("Este APK foi gerado sem Firebase: as notificações aparecem só dentro do app.", Tipo.subtitulo)
+                            } else if (!Push.permitido(context)) {
+                                BotaoTexto("Permitir notificações no celular", {
+                                    context.startActivity(
+                                        Intent(Settings.ACTION_APP_NOTIFICATION_SETTINGS).putExtra(Settings.EXTRA_APP_PACKAGE, context.packageName),
+                                    )
+                                }, cor = Cores.TextoSecundario)
+                            }
                         }
                     }
                     Divisoria(14.dp)
                     Linha(
                         titulo = "Modo trégua",
-                        subtitulo = "Pausa a competição: tudo conta só para a meta da casa.",
+                        subtitulo = "Pausa a competição: o placar para, moedas e cartas ficam guardadas e tudo conta só para a meta da casa.",
                         fim = { Interruptor(s.casa.modoTregua, vm::definirTregua) },
                     )
                 }

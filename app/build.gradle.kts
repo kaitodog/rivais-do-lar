@@ -34,12 +34,16 @@ android {
         applicationId = "com.rivaisdolar.app"
         minSdk = 26
         targetSdk = 37
-        versionCode = (project.findProperty("versionCode") as String?)?.toInt() ?: 1
-        versionName = (project.findProperty("versionName") as String?) ?: "0.1.0"
+        versionCode = (project.findProperty("versionCode") as String?)?.toInt() ?: 2
+        versionName = (project.findProperty("versionName") as String?) ?: "0.2.0"
 
         buildConfigField("String", "SUPABASE_URL", "\"${secret("SUPABASE_URL")}\"")
         buildConfigField("String", "SUPABASE_ANON_KEY", "\"${secret("SUPABASE_ANON_KEY")}\"")
         buildConfigField("String", "UPDATE_REPO", "\"${project.property("rivais.updateRepo")}\"")
+        // Firebase só entrega push. Sem estes valores o app funciona igual, só sem notificação no celular.
+        listOf("FIREBASE_APP_ID", "FIREBASE_API_KEY", "FIREBASE_PROJECT_ID", "FIREBASE_SENDER_ID").forEach {
+            buildConfigField("String", it, "\"${secret(it)}\"")
+        }
     }
 
     signingConfigs {
@@ -132,6 +136,10 @@ dependencies {
     implementation(libs.haze)
     implementation(libs.haze.blur)
     implementation(libs.kotlinx.serialization.json)
+    implementation(libs.androidx.exifinterface)
+    implementation(libs.glance.appwidget)
+    implementation(platform(libs.firebase.bom))
+    implementation(libs.firebase.messaging)
 
     debugImplementation(libs.compose.ui.test.manifest)
 

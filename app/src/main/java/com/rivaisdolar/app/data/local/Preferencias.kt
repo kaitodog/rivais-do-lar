@@ -46,6 +46,10 @@ class Preferencias @Inject constructor(@ApplicationContext context: Context) {
         get() = prefs.getString("temporada_vista", null)
         set(value) = prefs.edit { putString("temporada_vista", value) }
 
+    var tokenPush: String?
+        get() = prefs.getString("token_push", null)
+        set(value) = prefs.edit { putString("token_push", value) }
+
     var atualizacaoIgnorada: String?
         get() = prefs.getString("atualizacao_ignorada", null)
         set(value) = prefs.edit { putString("atualizacao_ignorada", value) }

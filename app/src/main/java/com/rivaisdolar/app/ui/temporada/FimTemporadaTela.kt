@@ -53,6 +53,7 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.rivaisdolar.app.data.model.Temporada
 import com.rivaisdolar.app.data.remote.CasaSnapshot
 import com.rivaisdolar.app.domain.pt
+import com.rivaisdolar.app.ui.cartas.MaoDeCartas
 import com.rivaisdolar.app.ui.components.Aviso
 import com.rivaisdolar.app.ui.components.BarraProgresso
 import com.rivaisdolar.app.ui.components.BotaoCapsula
@@ -141,7 +142,7 @@ fun FimTemporadaConteudo(
             Spacer(Modifier.height(4.dp))
             if (t.aposta != null) CartaoPremio(t, s, resultado, ocupado, aoResgatar)
             CartaoMetaFinal(t)
-            Mao()
+            MaoDeCartas(s.mao())
             BotaoCapsula(
                 "Definir aposta da próxima",
                 { apostando = Unit },
@@ -337,23 +338,6 @@ private fun CartaoMetaFinal(t: Temporada) {
                 Texto("${t.metaAtual.pt()} / ${t.metaAlvo.pt()}", Tipo.numeroPequeno)
             }
             BarraProgresso(t.metaAtual.toFloat() / t.metaAlvo.coerceAtLeast(1))
-        }
-    }
-}
-
-/** Mão de cartas (Fase 3): por enquanto, três espaços vazios. */
-@Composable
-private fun Mao() {
-    Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-        repeat(3) {
-            Column(
-                Modifier.weight(1f).height(66.dp).clip(RoundedCornerShape(16.dp)).border(1.dp, Cores.Separador, RoundedCornerShape(16.dp)),
-                horizontalAlignment = Alignment.CenterHorizontally,
-                verticalArrangement = Arrangement.Center,
-            ) {
-                Simbolo("add", tamanho = 19.sp, cor = Cores.TextoTerciario)
-                Texto("Vazio", Tipo.selo.copy(fontSize = 11.sp), cor = Cores.TextoTerciario)
-            }
         }
     }
 }
