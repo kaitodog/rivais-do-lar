@@ -1,0 +1,31 @@
+# Configuração da Supabase CLI (supabase start / db lint / test db).
+project_id = "rivais-do-lar"
+
+[api]
+schemas = ["public"]
+
+[db]
+major_version = 17
+
+[realtime]
+enabled = true
+
+[auth]
+site_url = "http://localhost:3000"
+enable_signup = true
+minimum_password_length = 6
+
+[auth.email]
+enable_signup = true
+enable_confirmations = true
+otp_length = 6
+otp_expiry = 3600
+
+# O app trabalha com códigos de 6 dígitos (sem links), então os e-mails mostram {{ .Token }}.
+[auth.email.template.confirmation]
+subject = "Seu código do Rivais do Lar"
+content_path = "./supabase/templates/confirmacao.html"
+
+[auth.email.template.recovery]
+subject = "Código para criar uma senha nova"
+content_path = "./supabase/templates/recuperacao.html"

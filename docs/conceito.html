@@ -1,0 +1,659 @@
+<title>Rivais do Lar</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap">
+<script src="https://unpkg.com/lucide@0.460.0/dist/umd/lucide.min.js"></script>
+<style>
+/* Layout: página no estilo apple.com (faixas brancas e cinza-claro alternadas, títulos grandes centralizados). Vidro só na barra de navegação flutuante, igual à regra do Liquid Glass. Tema preto único. */
+:root{
+  color-scheme:dark;
+  --bg:#000000; --bg2:#0B0B0D; --card:#1C1C1E; --ink:#F5F5F7; --muted:#A1A1A6; --faint:#86868B; --line:#2C2C2E;
+  --p1:#0A84FF; --p2:#FF9F0A; --alert:#FF453A; --gold:#E6B422;
+  --font:-apple-system,BlinkMacSystemFont,"SF Pro Display","SF Pro Text","Inter",system-ui,"Segoe UI",Roboto,sans-serif;
+}
+
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);font-family:var(--font);font-size:17px;line-height:1.47;letter-spacing:-.011em;-webkit-font-smoothing:antialiased}
+.band{padding-left:max(16px, env(safe-area-inset-left, 0px));padding-right:max(16px, env(safe-area-inset-right, 0px));padding-block:96px}
+.band.alt{background:var(--bg2)}
+.wrap{max-width:1040px;margin:0 auto;display:flex;flex-direction:column;gap:28px}
+.center{text-align:center;align-items:center}
+h1,h2,h3{margin:0;text-wrap:balance}
+h1{font-size:clamp(3rem,9vw,5.8rem);font-weight:700;letter-spacing:-.045em;line-height:1}
+h2{font-size:clamp(2rem,5vw,3.1rem);font-weight:700;letter-spacing:-.035em;line-height:1.06}
+h3{font-size:1.18rem;font-weight:600;letter-spacing:-.02em}
+p{margin:0}
+.kicker{font-size:1.05rem;font-weight:600;color:var(--muted)}
+.lead{font-size:1.25rem;line-height:1.4;color:var(--muted);max-width:40ch;letter-spacing:-.018em}
+.lead.wide{max-width:58ch}
+svg.lucide{width:1em;height:1em;stroke-width:1.9;flex:0 0 auto}
+code{font-family:ui-monospace,"SF Mono",Menlo,monospace;font-size:.85em;background:var(--bg2);padding:1px 6px;border-radius:6px}
+
+/* navegação flutuante: único vidro da página */
+.navwrap{position:sticky;top:env(safe-area-inset-top, 0px);z-index:20;display:flex;justify-content:center;padding:12px max(16px, env(safe-area-inset-right, 0px)) 0 max(16px, env(safe-area-inset-left, 0px));pointer-events:none}
+.pagenav{pointer-events:auto;display:flex;align-items:center;gap:4px;padding:5px;border-radius:999px;position:relative;
+  background:color-mix(in srgb,var(--bg) 62%,transparent);-webkit-backdrop-filter:blur(14px) saturate(190%);backdrop-filter:blur(14px) saturate(190%);
+  box-shadow:0 8px 30px rgba(0,0,0,.6),0 0 0 .5px rgba(255,255,255,.14),inset 0 1px 0 rgba(255,255,255,.18)}
+.pagenav a{color:var(--ink);text-decoration:none;font-size:.82rem;font-weight:600;padding:7px 13px;border-radius:999px}
+.pagenav a:first-child{background:color-mix(in srgb,var(--ink) 8%,transparent)}
+.pagenav a:focus-visible{outline:2px solid var(--p1);outline-offset:2px}
+body::before{content:"";position:fixed;inset:0 0 auto;height:env(safe-area-inset-top, 0px);z-index:10;background:var(--bg)}
+@media (max-width:520px){.pagenav a.opt{display:none}}
+
+/* ================= PHONE ================= */
+.phones{display:flex;gap:28px;overflow-x:auto;padding:20px 8px 36px;scroll-snap-type:x mandatory;width:100%}
+@media (min-width:1300px){.phones{justify-content:center}}
+.ph{flex:0 0 300px;scroll-snap-align:center;display:flex;flex-direction:column;gap:18px;align-items:center;text-align:center}
+.ph .cap b{display:block;font-size:1.02rem;font-weight:600;letter-spacing:-.02em}
+.ph .cap span{color:var(--muted);font-size:.9rem;display:block;max-width:30ch;margin:2px auto 0}
+.frame{width:300px;border-radius:52px;padding:7px;background:#1B1B1D;box-shadow:0 0 0 1.5px #3A3A3C,0 30px 60px -20px rgba(0,0,0,.45),inset 0 0 0 1px #000}
+.scr{--s-bg:#F2F2F7;--s-card:#FFFFFF;--s-ink:#000000;--s-2:rgba(60,60,67,.6);--s-3:rgba(60,60,67,.3);--s-sep:rgba(60,60,67,.18);--s-fill:rgba(120,120,128,.12);
+  height:626px;border-radius:45px;overflow:hidden;position:relative;isolation:isolate;background:var(--s-bg);color:var(--s-ink);font-size:13px;line-height:1.3;letter-spacing:-.01em;display:flex;flex-direction:column}
+.scr.dark{--s-bg:#000;--s-card:#1C1C1E;--s-ink:#fff;--s-2:rgba(235,235,245,.6);--s-3:rgba(235,235,245,.3);--s-sep:rgba(84,84,88,.6);--s-fill:rgba(120,120,128,.24)}
+.island{position:absolute;top:10px;left:50%;transform:translateX(-50%);width:92px;height:27px;border-radius:16px;background:#000;z-index:30}
+.sbar{display:flex;justify-content:space-between;align-items:center;padding:15px 30px 0;height:46px;font-weight:600;font-size:14px;flex:0 0 auto}
+.sbar .ic{display:flex;gap:5px;font-size:14px}
+.body{padding:6px 16px 0;display:flex;flex-direction:column;gap:14px;flex:1;min-height:0;overflow:hidden}
+.navrow{display:flex;justify-content:flex-end;gap:8px;height:38px;align-items:center}
+.ltitle{font-size:31px;font-weight:700;letter-spacing:-.035em;line-height:1.05}
+.lsub{font-size:13px;color:var(--s-2);margin-top:3px}
+.sh{font-size:12px;font-weight:500;color:var(--s-2);text-transform:uppercase;letter-spacing:.02em;padding:0 16px;margin-bottom:-8px}
+
+/* Liquid Glass (camada de controle) */
+.lg{position:relative;isolation:isolate;
+  background:rgba(255,255,255,.52);
+  -webkit-backdrop-filter:blur(9px) saturate(200%) brightness(1.04);backdrop-filter:blur(9px) saturate(200%) brightness(1.04);
+  box-shadow:0 10px 30px -6px rgba(0,0,0,.18),0 2px 6px rgba(0,0,0,.06),inset 0 1px 1.5px rgba(255,255,255,.95),inset 0 -1px 1px rgba(255,255,255,.4)}
+.lg::after{content:"";position:absolute;inset:0;border-radius:inherit;padding:1px;pointer-events:none;
+  background:linear-gradient(135deg,rgba(255,255,255,.95),rgba(255,255,255,.15) 35%,rgba(255,255,255,0) 55%,rgba(255,255,255,.55) 100%);
+  -webkit-mask:linear-gradient(#000 0 0) content-box,linear-gradient(#000 0 0);-webkit-mask-composite:xor;mask:linear-gradient(#000 0 0) content-box exclude,linear-gradient(#000 0 0)}
+.lg::before{content:"";position:absolute;inset:0;border-radius:inherit;pointer-events:none;z-index:-1;
+  background:radial-gradient(90% 60% at 30% 0%,rgba(255,255,255,.55),transparent 60%)}
+.dark .lg{background:rgba(44,44,48,.42);box-shadow:0 10px 30px -6px rgba(0,0,0,.6),inset 0 1px 1px rgba(255,255,255,.28),inset 0 -1px 1px rgba(255,255,255,.08)}
+.dark .lg::after{background:linear-gradient(135deg,rgba(255,255,255,.5),rgba(255,255,255,.06) 35%,rgba(255,255,255,0) 55%,rgba(255,255,255,.25))}
+.dark .lg::before{background:radial-gradient(90% 60% at 30% 0%,rgba(255,255,255,.14),transparent 60%)}
+.lg.tint{background:rgba(10,132,255,.82);color:#fff}
+.lg.tint::before{background:radial-gradient(90% 70% at 30% 0%,rgba(255,255,255,.45),transparent 60%)}
+.lg.gold{background:rgba(214,166,40,.82);color:#fff}
+.gbtn{width:38px;height:38px;border-radius:50%;display:grid;place-items:center;font-size:17px;color:var(--s-ink)}
+
+/* tab bar iOS 26 */
+.tabbar{position:absolute;left:12px;right:12px;bottom:22px;display:flex;gap:10px;align-items:center;z-index:10}
+.tabs{flex:1;height:58px;border-radius:999px;display:grid;grid-template-columns:repeat(3,1fr);padding:4px;align-items:center}
+.tabs span{height:100%;border-radius:999px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;font-size:10px;font-weight:600;color:var(--s-ink)}
+.tabs span svg{font-size:20px;stroke-width:2}
+.tabs span.on{color:var(--p1);background:rgba(255,255,255,.10);box-shadow:inset 0 .5px 0 rgba(255,255,255,.22)}
+.fab{width:58px;height:58px;border-radius:50%;display:grid;place-items:center;font-size:24px}
+.fab svg{stroke-width:2.3}
+.edge{position:absolute;left:0;right:0;bottom:0;height:120px;z-index:5;pointer-events:none;
+  background:linear-gradient(180deg,rgba(0,0,0,0),rgba(0,0,0,.8) 70%);
+  -webkit-backdrop-filter:blur(1.5px);backdrop-filter:blur(1.5px);
+  -webkit-mask:linear-gradient(180deg,transparent,#000 55%);mask:linear-gradient(180deg,transparent,#000 55%)}
+
+/* conteúdo (sólido) */
+.card{background:var(--s-card);border-radius:22px}
+.score{padding:16px 16px 14px;display:flex;flex-direction:column;gap:12px}
+.score .row{display:grid;grid-template-columns:1fr auto 1fr;align-items:center}
+.who{display:flex;flex-direction:column;gap:6px}
+.who.r{align-items:flex-end;text-align:right}
+.who .id{display:flex;align-items:center;gap:7px;font-weight:600;font-size:13px}
+.who.r .id{flex-direction:row-reverse}
+.av{width:26px;height:26px;border-radius:50%;display:grid;place-items:center;color:#fff;font-weight:700;font-size:12px}
+.av.a{background:var(--p1)} .av.b{background:var(--p2)}
+.num{font-size:36px;font-weight:700;letter-spacing:-.05em;line-height:1;font-variant-numeric:tabular-nums}
+.vsx{font-size:12px;font-weight:600;color:var(--s-3)}
+.split{display:flex;height:6px;border-radius:3px;overflow:hidden;gap:2px}
+.split i{display:block;background:var(--p1);border-radius:3px}
+.split i+i{background:var(--p2)}
+.meta{display:flex;justify-content:space-between;font-size:12px;color:var(--s-2)}
+.meta span{display:inline-flex;align-items:center;gap:4px}
+.lead-badge{font-size:10.5px;font-weight:600;color:var(--p1);background:rgba(10,132,255,.18);padding:2px 7px;border-radius:999px;align-self:flex-start}
+.goal{padding:13px 16px;display:flex;flex-direction:column;gap:9px}
+.goal .t{display:flex;justify-content:space-between;align-items:baseline}
+.goal b{font-weight:600;font-size:14px}
+.goal small{font-size:12px;color:var(--s-2);font-variant-numeric:tabular-nums}
+.bar{height:6px;border-radius:3px;background:var(--s-fill);overflow:hidden}
+.bar i{display:block;height:100%;width:72%;background:var(--s-ink);border-radius:3px}
+
+.list{background:var(--s-card);border-radius:22px;overflow:hidden;flex:0 0 auto}
+.li{display:flex;align-items:center;gap:12px;padding:10px 14px;position:relative}
+.li+.li::before{content:"";position:absolute;top:0;right:0;left:58px;height:.5px;background:var(--s-sep)}
+.ico{width:32px;height:32px;border-radius:9px;display:grid;place-items:center;background:var(--s-fill);font-size:17px;flex:0 0 32px}
+.li .t{flex:1;min-width:0}
+.li .t b{display:flex;align-items:center;gap:6px;font-weight:500;font-size:14.5px;letter-spacing:-.02em}
+.li .t small{display:block;font-size:12px;color:var(--s-2);margin-top:1px}
+.li .p{font-weight:600;font-size:15px;font-variant-numeric:tabular-nums;color:var(--s-ink)}
+.li .chev{color:var(--s-3);font-size:15px;margin-left:-4px}
+.dot{width:7px;height:7px;border-radius:50%}
+.dot.a{background:var(--p1)} .dot.b{background:var(--p2)}
+.li.bomb .ico{background:rgba(255,69,58,.18);color:var(--alert)}
+.li.bomb small,.li.bomb .p{color:var(--alert)}
+.timer{color:var(--alert)!important}
+
+.segm{display:grid;grid-template-columns:repeat(3,1fr);background:var(--s-fill);border-radius:999px;padding:3px;font-size:13px;font-weight:500;text-align:center}
+.segm span{padding:6px 0;border-radius:999px}
+.segm span.on{background:#636366;font-weight:600;box-shadow:0 2px 8px rgba(0,0,0,.3)}
+
+/* sheet */
+.behind{position:absolute;inset:0;padding:46px 16px 0;display:flex;flex-direction:column;gap:14px;filter:saturate(.9)}
+.dim{position:absolute;inset:0;background:rgba(0,0,0,.45);z-index:2}
+.sheet{position:absolute;left:7px;right:7px;bottom:7px;top:96px;border-radius:38px;z-index:3;display:flex;flex-direction:column;gap:14px;padding:8px 16px 18px;background:rgba(30,30,34,.72)}
+.grab{width:36px;height:5px;border-radius:3px;background:rgba(235,235,245,.3);align-self:center;margin-top:2px}
+.shead{display:grid;grid-template-columns:38px 1fr 38px;align-items:center;text-align:center;font-weight:600;font-size:16px}
+.photo{height:118px;border-radius:20px;background:linear-gradient(135deg,#2C2C30,#1C1C1E);display:grid;place-items:center;color:rgba(235,235,245,.35);font-size:30px;position:relative}
+.photo span{position:absolute;bottom:9px;left:11px;font-size:11px;font-weight:600;display:flex;gap:5px;align-items:center;color:rgba(235,235,245,.65)}
+.rc{display:flex;flex-direction:column}
+.rc div{display:flex;justify-content:space-between;padding:8px 2px;font-size:13.5px;border-bottom:.5px solid var(--s-sep)}
+.rc div:last-child{border:0}
+.rc div span{color:var(--s-2)}
+.rc div b{font-weight:600;font-variant-numeric:tabular-nums}
+.tot{display:flex;justify-content:space-between;align-items:flex-end;padding:0 2px}
+.tot small{font-size:12px;color:var(--s-2);font-weight:500}
+.tot .v{font-size:40px;font-weight:700;letter-spacing:-.05em;line-height:1}
+.tot .c{font-size:13px;color:var(--s-2);display:flex;gap:4px;align-items:center;padding-bottom:4px}
+.pbtn{height:52px;border-radius:999px;display:flex;align-items:center;justify-content:center;gap:8px;font-weight:600;font-size:16px;margin-top:auto}
+.fine{font-size:12px;color:var(--s-2);text-align:center}
+
+/* vitória */
+.vic{position:relative;display:flex;flex-direction:column;align-items:center;gap:6px;padding-top:24px}
+.rays{position:absolute;top:-6px;width:290px;height:290px;border-radius:50%;background:repeating-conic-gradient(from 0deg,rgba(230,180,34,.26) 0 9deg,transparent 9deg 18deg);
+  -webkit-mask:radial-gradient(closest-side,#000 25%,transparent);mask:radial-gradient(closest-side,#000 25%,transparent);animation:spin 20s linear infinite}
+@keyframes spin{to{transform:rotate(360deg)}}
+.cup{position:relative;width:100px;height:100px;filter:drop-shadow(0 0 26px rgba(230,180,34,.55))}
+.vt{position:relative;font-size:34px;font-weight:800;letter-spacing:-.045em;line-height:1}
+.vs2{position:relative;font-size:13px;color:var(--s-2);font-variant-numeric:tabular-nums}
+.conf{position:absolute;width:5px;height:9px;border-radius:2px}
+.prize{display:flex;gap:12px;align-items:center;padding:13px 14px}
+.prize .ico{background:rgba(230,180,34,.16);color:#E6B422}
+.prize b{display:block;font-weight:600;font-size:14px}
+.prize small{font-size:12px;color:var(--s-2)}
+.hand{display:flex;gap:8px}
+.hc{flex:1;height:66px;border-radius:16px;background:var(--s-card);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:5px;font-size:11px;font-weight:600}
+.hc svg{font-size:19px}
+.hc.ep{box-shadow:inset 0 0 0 1.5px rgba(230,180,34,.7)} .hc.ep svg{color:#E6B422}
+.hc.em{background:transparent;box-shadow:inset 0 0 0 1px var(--s-sep);color:var(--s-3)}
+.closebtn{position:absolute;top:52px;left:16px;z-index:6;color:#fff}
+
+/* ================= SEÇÕES ================= */
+.pr{display:grid;grid-template-columns:repeat(3,1fr);gap:16px;width:100%}
+.pcard{background:var(--card);border-radius:24px;padding:26px;display:flex;flex-direction:column;gap:10px;text-align:left}
+.band.alt .pcard{background:var(--card)}
+.band:not(.alt) .pcard{background:var(--bg2)}
+.pcard .k{font-size:28px;color:var(--ink)}
+.pcard p{color:var(--muted);font-size:.95rem}
+.pcard .use{margin-top:auto;padding-top:12px;border-top:1px solid var(--line);font-size:.88rem;color:var(--ink)}
+.pcard .use b{font-weight:600}
+@media (max-width:860px){.pr{grid-template-columns:1fr 1fr}}
+@media (max-width:560px){.pr{grid-template-columns:1fr}}
+
+.steps{display:grid;grid-template-columns:repeat(5,1fr);gap:0;width:100%;text-align:left}
+.step{padding:0 18px 0 0;display:flex;flex-direction:column;gap:8px;min-width:0}
+.step .n{font-size:.85rem;font-weight:600;color:var(--faint);font-variant-numeric:tabular-nums}
+.step b{font-weight:600;font-size:1.05rem;letter-spacing:-.02em}
+.step span{color:var(--muted);font-size:.92rem}
+@media (max-width:760px){.steps{grid-template-columns:1fr 1fr;gap:26px 0}}
+
+.calc{background:var(--card);border-radius:28px;padding:30px;display:grid;grid-template-columns:1fr 260px;gap:36px;width:100%;text-align:left}
+.ctl{display:flex;flex-direction:column;gap:24px;min-width:0}
+.ctl label{display:flex;justify-content:space-between;font-weight:600;font-size:.98rem;margin-bottom:10px}
+.ctl output{color:var(--muted);font-weight:500;font-variant-numeric:tabular-nums}
+input[type=range]{--v:50%;-webkit-appearance:none;appearance:none;width:100%;height:6px;border-radius:3px;outline:none;
+  background:linear-gradient(90deg,var(--p1) var(--v),color-mix(in srgb,var(--ink) 12%,transparent) var(--v))}
+input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:38px;height:24px;border-radius:999px;background:#fff;box-shadow:0 3px 10px rgba(0,0,0,.18),0 0 0 .5px rgba(0,0,0,.06);cursor:pointer;transition:transform .15s ease,background .15s ease}
+input[type=range]:active::-webkit-slider-thumb{transform:scale(1.25);background:rgba(255,255,255,.55);box-shadow:0 6px 18px rgba(0,0,0,.2),inset 0 1px 1px #fff,0 0 0 .5px rgba(0,0,0,.08)}
+input[type=range]::-moz-range-thumb{width:38px;height:24px;border:0;border-radius:999px;background:#fff;box-shadow:0 3px 10px rgba(0,0,0,.18);cursor:pointer}
+input[type=range]:focus-visible{box-shadow:0 0 0 4px color-mix(in srgb,var(--p1) 30%,transparent)}
+.res{display:flex;flex-direction:column;justify-content:center;align-items:center;text-align:center;gap:4px;border-radius:22px;background:var(--bg2);padding:24px}
+.res small{color:var(--muted);font-size:.9rem;font-weight:500}
+.res .big{font-size:5rem;font-weight:700;letter-spacing:-.06em;line-height:1;font-variant-numeric:tabular-nums}
+.formula{font-size:.95rem;color:var(--muted)}
+.formula b{color:var(--ink);font-weight:600}
+@media (max-width:680px){.calc{grid-template-columns:1fr;padding:22px}}
+
+.tbl{background:var(--card);border-radius:24px;overflow-x:auto;width:100%;text-align:left}
+table{border-collapse:collapse;width:100%;min-width:520px;font-size:.95rem}
+th,td{padding:13px 20px;text-align:left}
+th{font-size:.78rem;font-weight:600;color:var(--faint)}
+td{border-top:1px solid var(--line)}
+td.n{text-align:right;font-weight:600;font-variant-numeric:tabular-nums}
+td .ti{display:inline-flex;align-items:center;gap:12px}
+td .ti i{display:grid}
+td .tico{width:30px;height:30px;border-radius:8px;background:var(--bg2);display:inline-grid;place-items:center;font-size:16px}
+.band:not(.alt) td .tico{background:var(--bg2)}
+
+.mech{display:grid;grid-template-columns:repeat(4,1fr);gap:16px;width:100%;text-align:left}
+.mc{background:var(--bg2);border-radius:24px;padding:24px;display:flex;flex-direction:column;gap:8px}
+.mc .k{font-size:26px}
+.mc p{color:var(--muted);font-size:.92rem}
+.mc p b{color:var(--ink);font-weight:600}
+@media (max-width:900px){.mech{grid-template-columns:1fr 1fr}}
+@media (max-width:520px){.mech{grid-template-columns:1fr}}
+
+.deck{display:grid;grid-template-columns:repeat(3,1fr);gap:16px;width:100%;text-align:left}
+.gc{border-radius:24px;padding:22px;background:var(--card);display:grid;grid-template-columns:auto 1fr auto;gap:16px;align-items:center}
+.gc .k{width:48px;height:48px;border-radius:14px;background:var(--bg2);display:grid;place-items:center;font-size:22px}
+.gc b{display:block;font-weight:600;letter-spacing:-.02em}
+.gc small{color:var(--muted);font-size:.86rem;display:block;line-height:1.35}
+.gc .cost{font-weight:600;font-variant-numeric:tabular-nums;font-size:.95rem;white-space:nowrap}
+.gc .rar{font-size:.72rem;font-weight:600;color:var(--faint);text-transform:uppercase;letter-spacing:.04em}
+.gc.ep .k{background:color-mix(in srgb,var(--gold) 16%,transparent);color:var(--gold)}
+.gc.ep .rar{color:var(--gold)}
+@media (max-width:860px){.deck{grid-template-columns:1fr 1fr}}
+@media (max-width:560px){.deck{grid-template-columns:1fr}}
+
+.rules{width:100%;background:var(--bg2);border-radius:24px;text-align:left}
+.rule{display:grid;grid-template-columns:44px 200px 1fr;gap:14px;align-items:center;padding:18px 22px}
+.rule+.rule{border-top:1px solid var(--line)}
+.rule .k{font-size:22px;color:var(--muted)}
+.rule b{font-weight:600}
+.rule span{color:var(--muted);font-size:.95rem}
+@media (max-width:620px){.rule{grid-template-columns:36px 1fr}.rule span{grid-column:2}}
+
+.idg{display:grid;grid-template-columns:1fr 1fr;gap:16px;width:100%;text-align:left}
+.box{background:var(--card);border-radius:24px;padding:26px;display:flex;flex-direction:column;gap:16px}
+.sws{display:grid;grid-template-columns:repeat(3,1fr);gap:14px}
+.sw{display:flex;flex-direction:column;gap:6px;font-size:.85rem}
+.sw i{display:block;height:54px;border-radius:14px;box-shadow:inset 0 0 0 1px color-mix(in srgb,var(--ink) 10%,transparent)}
+.sw small{color:var(--muted)}
+.tline{display:flex;flex-direction:column;gap:2px}
+.tline small{color:var(--muted);font-size:.84rem}
+@media (max-width:700px){.idg{grid-template-columns:1fr}}
+
+.stack{display:grid;grid-template-columns:repeat(3,1fr);gap:16px;width:100%;text-align:left}
+.st{background:var(--bg2);border-radius:22px;padding:22px;display:flex;flex-direction:column;gap:6px}
+.st b{font-weight:600}
+.st span{color:var(--muted);font-size:.92rem}
+.st.hi{grid-column:span 3;display:grid;grid-template-columns:1fr 1fr;gap:10px 30px}
+.st.hi h3{grid-column:1/-1}
+@media (max-width:760px){.stack{grid-template-columns:1fr}.st.hi{grid-column:auto;grid-template-columns:1fr}}
+
+.road{display:grid;grid-template-columns:repeat(4,1fr);gap:16px;width:100%;text-align:left}
+.rd{background:var(--card);border-radius:24px;padding:24px;display:flex;flex-direction:column;gap:10px}
+.rd .ph2{font-size:1.5rem;font-weight:700;letter-spacing:-.03em}
+.rd .ph2 small{font-size:.78rem;font-weight:600;color:var(--p1);margin-left:6px;letter-spacing:0}
+.rd ul{margin:0;padding-left:18px;color:var(--muted);font-size:.92rem;display:flex;flex-direction:column;gap:5px}
+@media (max-width:860px){.road{grid-template-columns:1fr 1fr}}
+@media (max-width:480px){.road{grid-template-columns:1fr}}
+
+.qs{width:100%;max-width:760px;display:flex;flex-direction:column;text-align:left}
+.q{display:grid;grid-template-columns:40px 1fr;gap:12px;padding:18px 0;border-top:1px solid var(--line)}
+.q:last-child{border-bottom:1px solid var(--line)}
+.q .n{font-weight:700;color:var(--faint);font-variant-numeric:tabular-nums}
+footer{text-align:center;color:var(--faint);font-size:.8rem;padding-block:40px}
+
+/* tema preto: superfícies em grafite, preenchimentos internos um tom acima */
+.band:not(.alt) .pcard,.mc,.rules,.st{background:var(--card)}
+.res,td .tico,.band:not(.alt) td .tico,.gc .k{background:#2C2C2E}
+code{background:#2C2C2E}
+.pagenav a:first-child{background:rgba(255,255,255,.12)}
+
+@media (prefers-reduced-motion: reduce){*{animation:none!important;transition:none!important}}
+</style>
+
+<div class="navwrap"><nav class="pagenav" aria-label="Seções"><a href="#topo">Rivais do Lar</a><a href="#telas">Telas</a><a class="opt" href="#jogo">Jogo</a><a class="opt" href="#design">Design</a><a href="#tecnica">Técnica</a></nav></div>
+
+<!-- HERO -->
+<div class="band" id="topo" style="padding-block:72px 40px">
+  <div class="wrap center">
+    <p class="kicker">Conceito · App Android</p>
+    <h1>Rivais do Lar.</h1>
+    <p class="lead">A faxina virou campeonato. Pontos por tarefa, temporada semanal e um prêmio pra quem vencer.</p>
+  </div>
+</div>
+
+<!-- TELAS -->
+<div class="band" id="telas" style="padding-block:8px 80px">
+  <div class="wrap center" style="max-width:1340px">
+    <div class="phones">
+
+      <!-- 1. PLACAR -->
+      <div class="ph">
+        <div class="frame"><div class="scr dark">
+          <div class="island"></div>
+          <div class="sbar"><span>21:04</span><span class="ic"><i data-lucide="signal"></i><i data-lucide="wifi"></i><i data-lucide="battery-full"></i></span></div>
+          <div class="body">
+            <div class="navrow"><span class="gbtn lg"><i data-lucide="bell"></i></span><span class="gbtn lg"><i data-lucide="user-round"></i></span></div>
+            <div><div class="ltitle">Placar</div><div class="lsub">Temporada 7 · fecha domingo às 22h</div></div>
+            <div class="card score">
+              <div class="row">
+                <div class="who"><span class="id"><span class="av a">V</span>Vitor</span><span class="num">1.240</span><span class="lead-badge">Na frente</span></div>
+                <span class="vsx">vs</span>
+                <div class="who r"><span class="id"><span class="av b">E</span>Ela</span><span class="num">1.185</span><span style="height:18px"></span></div>
+              </div>
+              <div class="split"><i style="width:51%"></i><i style="flex:1"></i></div>
+              <div class="meta"><span><i data-lucide="flame"></i>Sequência de 4 dias</span><span>+55 pts</span></div>
+            </div>
+            <div class="card goal"><div class="t"><b>Meta da casa · pizza de sábado</b><small>1.445 / 2.000</small></div><div class="bar"><i></i></div></div>
+            <div class="sh">Hoje</div>
+            <div class="list">
+              <div class="li bomb"><span class="ico"><i data-lucide="bomb"></i></span><div class="t"><b>Limpar banheiro</b><small>Bomba · parada há 3 dias</small></div><span class="p">175</span></div>
+              <div class="li"><span class="ico"><i data-lucide="utensils"></i></span><div class="t"><b>Lavar louça <span class="dot a"></span></b><small>Reservada por você</small></div><span class="p">40</span></div>
+              <div class="li"><span class="ico"><i data-lucide="paw-print"></i></span><div class="t"><b>Gaiola dos porquinhos</b><small>Livre · 25 min</small></div><span class="p">60</span></div>
+              <div class="li"><span class="ico"><i data-lucide="shirt"></i></span><div class="t"><b>Estender roupa</b><small>Livre · 15 min</small></div><span class="p">25</span></div>
+            </div>
+          </div>
+          <div class="edge"></div>
+          <div class="tabbar">
+            <div class="tabs lg"><span class="on"><i data-lucide="trophy"></i>Placar</span><span><i data-lucide="list-checks"></i>Tarefas</span><span><i data-lucide="layers"></i>Cartas</span></div>
+            <div class="fab lg tint"><i data-lucide="plus"></i></div>
+          </div>
+        </div></div>
+        <div class="cap"><b>Placar</b><span>Conteúdo sólido e limpo. O vidro só aparece nos botões do topo e na barra flutuante.</span></div>
+      </div>
+
+      <!-- 2. TAREFAS -->
+      <div class="ph">
+        <div class="frame"><div class="scr dark">
+          <div class="island"></div>
+          <div class="sbar"><span>21:05</span><span class="ic"><i data-lucide="signal"></i><i data-lucide="wifi"></i><i data-lucide="battery-full"></i></span></div>
+          <div class="body">
+            <div class="navrow"><span class="gbtn lg"><i data-lucide="search"></i></span><span class="gbtn lg"><i data-lucide="sliders-horizontal"></i></span></div>
+            <div class="ltitle">Tarefas</div>
+            <div class="segm"><span class="on">Livres</span><span>Minhas</span><span>Dela</span></div>
+            <div class="sh">Reservadas</div>
+            <div class="list">
+              <div class="li"><span class="ico"><i data-lucide="shopping-cart"></i></span><div class="t"><b>Mercado da semana <span class="dot b"></span></b><small class="timer">Roubável em 5h 42min</small></div><span class="p">90</span><i data-lucide="chevron-right" class="chev"></i></div>
+            </div>
+            <div class="sh">Livres</div>
+            <div class="list">
+              <div class="li"><span class="ico"><i data-lucide="trash-2"></i></span><div class="t"><b>Tirar o lixo</b><small>Rápida · 5 min</small></div><span class="p">10</span><i data-lucide="chevron-right" class="chev"></i></div>
+              <div class="li"><span class="ico"><i data-lucide="notebook-pen"></i></span><div class="t"><b>Planejar cardápio</b><small>Carga mental · 20 min</small></div><span class="p">30</span><i data-lucide="chevron-right" class="chev"></i></div>
+              <div class="li"><span class="ico"><i data-lucide="wind"></i></span><div class="t"><b>Aspirar a sala</b><small>Limpeza · 25 min</small></div><span class="p">45</span><i data-lucide="chevron-right" class="chev"></i></div>
+              <div class="li"><span class="ico"><i data-lucide="bath"></i></span><div class="t"><b>Trocar toalhas</b><small>Rápida · 5 min</small></div><span class="p">10</span><i data-lucide="chevron-right" class="chev"></i></div>
+              <div class="li"><span class="ico"><i data-lucide="sprout"></i></span><div class="t"><b>Regar plantas</b><small>Rápida · 10 min</small></div><span class="p">15</span><i data-lucide="chevron-right" class="chev"></i></div>
+            </div>
+          </div>
+          <div class="edge"></div>
+          <div class="tabbar">
+            <div class="tabs lg"><span><i data-lucide="trophy"></i>Placar</span><span class="on"><i data-lucide="list-checks"></i>Tarefas</span><span><i data-lucide="layers"></i>Cartas</span></div>
+            <div class="fab lg tint"><i data-lucide="plus"></i></div>
+          </div>
+        </div></div>
+        <div class="cap"><b>Tarefas</b><span>Lista agrupada no padrão do sistema. A lista passa por baixo da barra de vidro ao rolar.</span></div>
+      </div>
+
+      <!-- 3. CONCLUIR (sheet) -->
+      <div class="ph">
+        <div class="frame"><div class="scr dark">
+          <div class="island"></div>
+          <div class="behind">
+            <div class="ltitle">Tarefas</div>
+            <div class="list"><div class="li"><span class="ico"><i data-lucide="utensils"></i></span><div class="t"><b>Lavar louça</b><small>Reservada por você</small></div><span class="p">40</span></div></div>
+          </div>
+          <div class="dim"></div>
+          <div class="sheet lg">
+            <div class="grab"></div>
+            <div class="shead"><span class="gbtn" style="background:rgba(120,120,128,.14)"><i data-lucide="x"></i></span><span>Lavar louça</span><span></span></div>
+            <div class="photo"><i data-lucide="image"></i><span><i data-lucide="camera"></i>Adicionar foto do depois</span></div>
+            <div class="rc">
+              <div><span>Base · 20 min × 1,5 × 1,3</span><b>40</b></div>
+              <div><span>Sequência de 4 dias</span><b>× 1,2</b></div>
+              <div><span>Carta Dobradinha</span><b>× 2</b></div>
+            </div>
+            <div class="tot"><div><small>Você ganha</small><div class="v">+95</div></div><span class="c"><i data-lucide="coins"></i>+9 moedas</span></div>
+            <div class="pbtn lg tint">Enviar pra validar</div>
+            <div class="fine">Ela confirma com um toque. Sem resposta em 12h, vale sozinho.</div>
+          </div>
+        </div></div>
+        <div class="cap"><b>Concluir</b><span>Sheet de vidro flutuante, com cantos concêntricos aos do aparelho. Único botão colorido: a ação principal.</span></div>
+      </div>
+
+      <!-- 4. VITÓRIA -->
+      <div class="ph">
+        <div class="frame"><div class="scr dark">
+          <div class="island"></div>
+          <div class="sbar"><span>22:00</span><span class="ic"><i data-lucide="signal"></i><i data-lucide="wifi"></i><i data-lucide="battery-medium"></i></span></div>
+          <span class="gbtn lg closebtn"><i data-lucide="x"></i></span>
+          <div class="body" style="gap:12px">
+            <div class="vic">
+              <div class="rays"></div>
+              <span class="conf" style="background:#fff;left:24px;top:40px;transform:rotate(25deg)"></span>
+              <span class="conf" style="background:#E6B422;left:56px;top:110px;transform:rotate(-30deg)"></span>
+              <span class="conf" style="background:#fff;right:34px;top:56px;transform:rotate(50deg)"></span>
+              <span class="conf" style="background:#E6B422;right:64px;top:130px;transform:rotate(-15deg)"></span>
+              <span class="conf" style="background:#F6DE8D;left:120px;top:16px;transform:rotate(70deg)"></span>
+              <svg class="cup" viewBox="0 0 100 100" aria-hidden="true">
+                <defs><linearGradient id="gcup" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#FFF4CC"/><stop offset=".5" stop-color="#E6B422"/><stop offset="1" stop-color="#A97A0C"/></linearGradient></defs>
+                <path d="M22 18 H78 V36 C78 54 66 64 50 64 C34 64 22 54 22 36 Z" fill="url(#gcup)"/>
+                <path d="M22 24 H10 C10 40 16 46 26 48 M78 24 H90 C90 40 84 46 74 48" fill="none" stroke="#E6B422" stroke-width="6" stroke-linecap="round"/>
+                <rect x="44" y="62" width="12" height="14" fill="#C9970F"/>
+                <rect x="30" y="76" width="40" height="12" rx="4" fill="url(#gcup)"/>
+                <path d="M50 28 l4 8 9 1 -7 6 2 9 -8 -5 -8 5 2 -9 -7 -6 9 -1z" fill="#fff" opacity=".9"/>
+              </svg>
+              <div class="vt">Vitória!</div>
+              <div class="vs2">Temporada 7 · 1.410 a 1.335</div>
+            </div>
+            <div class="card prize"><span class="ico"><i data-lucide="gift"></i></span><div><b>Você escolhe o restaurante</b><small>Prêmio da aposta desta semana</small></div></div>
+            <div class="card goal"><div class="t"><b>Meta da casa batida</b><small>2.745 / 2.000</small></div><div class="bar"><i style="width:100%"></i></div></div>
+            <div class="hand"><div class="hc ep"><i data-lucide="copy-plus"></i>Dobradinha</div><div class="hc"><i data-lucide="shield"></i>Escudo</div><div class="hc em"><i data-lucide="plus"></i>Vazio</div></div>
+            <div class="pbtn lg gold" style="margin-top:6px">Definir aposta da próxima</div>
+          </div>
+        </div></div>
+        <div class="cap"><b>Fim de temporada</b><span>O único momento de festa visual do app: troféu, raios girando e confete.</span></div>
+      </div>
+
+    </div>
+  </div>
+</div>
+
+<!-- PRINCÍPIOS -->
+<div class="band alt">
+  <div class="wrap center">
+    <p class="kicker">O que a pesquisa mostrou</p>
+    <h2>Liquid Glass é uma camada,<br>não um enfeite.</h2>
+    <p class="lead wide">As diretrizes da Apple tratam o vidro como a camada de controles que flutua sobre o conteúdo. Estas são as regras que guiaram as telas acima.</p>
+    <div class="pr">
+      <div class="pcard"><i data-lucide="layers-2" class="k"></i><h3>Vidro só na navegação</h3><p>Tab bars, toolbars, botões flutuantes e sheets. O conteúdo fica em superfícies sólidas por baixo.</p><div class="use"><b>No app:</b> placar, listas e cartões são sólidos. Vidro só na barra, nos botões do topo e no sheet.</div></div>
+      <div class="pcard"><i data-lucide="droplet" class="k"></i><h3>Cor com moderação</h3><p>Símbolos e textos no vidro ficam monocromáticos. Tinta só na ação principal; a cor da marca vai no conteúdo.</p><div class="use"><b>No app:</b> o "+" e o botão de enviar são os únicos vidros tingidos.</div></div>
+      <div class="pcard"><i data-lucide="copy-x" class="k"></i><h3>Nada de vidro sobre vidro</h3><p>Camadas de vidro empilhadas viram ruído. Dentro de um sheet de vidro, o conteúdo é plano.</p><div class="use"><b>No app:</b> a conta dentro do sheet é só texto e divisórias.</div></div>
+      <div class="pcard"><i data-lucide="scan" class="k"></i><h3>Cantos concêntricos</h3><p>Controles em cápsula e cantos que acompanham a curva da tela do aparelho.</p><div class="use"><b>No app:</b> barra e botão em cápsula, sheet com margem fina e raio que segue o celular.</div></div>
+      <div class="pcard"><i data-lucide="arrow-down-to-line" class="k"></i><h3>Conteúdo passa por baixo</h3><p>A lista rola por baixo dos controles, com um esmaecimento na borda que mantém a leitura.</p><div class="use"><b>No app:</b> a barra de abas encolhe ao rolar pra baixo e volta ao subir.</div></div>
+      <div class="pcard"><i data-lucide="sun-moon" class="k"></i><h3>Adapta claro e escuro</h3><p>O vidro clareia ou escurece conforme o que está atrás, e respeita "reduzir transparência".</p><div class="use"><b>No app:</b> tema preto em tudo, com o vidro escurecendo por cima do preto e clareando sobre o troféu.</div></div>
+    </div>
+  </div>
+</div>
+
+<!-- LOOP -->
+<div class="band" id="jogo">
+  <div class="wrap center">
+    <p class="kicker">Como funciona</p>
+    <h2>Um ciclo curto, todo dia.</h2>
+    <div class="steps">
+      <div class="step"><span class="n">1</span><b>Ver o placar</b><span>Quem lidera, quanto falta e o que está atrasado.</span></div>
+      <div class="step"><span class="n">2</span><b>Reservar</b><span>Toca na tarefa e ela fica sua. Ela vê na hora.</span></div>
+      <div class="step"><span class="n">3</span><b>Fazer</b><span>No mundo real. A foto do depois é opcional.</span></div>
+      <div class="step"><span class="n">4</span><b>Validar</b><span>Ela confirma com um toque e os pontos entram.</span></div>
+      <div class="step"><span class="n">5</span><b>Provocar</b><span>"Vitor passou na frente por 55 pontos."</span></div>
+    </div>
+  </div>
+</div>
+
+<!-- PONTOS -->
+<div class="band alt">
+  <div class="wrap center">
+    <p class="kicker">Pontuação</p>
+    <h2>Cada tarefa tem seu preço.</h2>
+    <p class="formula">pontos = <b>minutos</b> × <b>esforço</b> × <b>chatice</b> × <b>bônus de atraso</b>, arredondado de 5 em 5</p>
+    <div class="calc">
+      <div class="ctl">
+        <div><label for="m">Tempo estimado <output id="mo">20 min</output></label><input id="m" type="range" min="5" max="120" step="5" value="20"></div>
+        <div><label for="e">Esforço físico <output id="eo">Médio · ×1,5</output></label><input id="e" type="range" min="0" max="2" step="1" value="1"></div>
+        <div><label for="c">Chatice <output id="co">×1,3</output></label><input id="c" type="range" min="1" max="1.6" step="0.1" value="1.3"></div>
+        <div><label for="d">Dias parada <output id="do">0 dias</output></label><input id="d" type="range" min="0" max="10" step="1" value="0"></div>
+      </div>
+      <div class="res"><small>Vale</small><span class="big" id="out">40</span><small id="outx">pontos · 4 moedas</small></div>
+    </div>
+    <div class="tbl">
+      <table>
+        <thead><tr><th>Tarefa</th><th>Categoria</th><th>Frequência</th><th style="text-align:right">Pontos</th></tr></thead>
+        <tbody>
+          <tr><td><span class="ti"><span class="tico"><i data-lucide="utensils"></i></span>Lavar a louça do jantar</span></td><td>Cozinha</td><td>Diária</td><td class="n">40</td></tr>
+          <tr><td><span class="ti"><span class="tico"><i data-lucide="bath"></i></span>Limpar banheiro completo</span></td><td>Pesada</td><td>Semanal</td><td class="n">135</td></tr>
+          <tr><td><span class="ti"><span class="tico"><i data-lucide="paw-print"></i></span>Limpar a gaiola dos porquinhos</span></td><td>Pets</td><td>2× semana</td><td class="n">60</td></tr>
+          <tr><td><span class="ti"><span class="tico"><i data-lucide="shirt"></i></span>Estender e recolher roupa</span></td><td>Lavanderia</td><td>3× semana</td><td class="n">25</td></tr>
+          <tr><td><span class="ti"><span class="tico"><i data-lucide="trash-2"></i></span>Tirar o lixo</span></td><td>Rápida</td><td>Diária</td><td class="n">10</td></tr>
+          <tr><td><span class="ti"><span class="tico"><i data-lucide="shopping-cart"></i></span>Mercado da semana</span></td><td>Rua</td><td>Semanal</td><td class="n">90</td></tr>
+          <tr><td><span class="ti"><span class="tico"><i data-lucide="notebook-pen"></i></span>Planejar o cardápio</span></td><td>Carga mental</td><td>Semanal</td><td class="n">30</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>
+
+<!-- MECÂNICAS -->
+<div class="band">
+  <div class="wrap center">
+    <p class="kicker">Mecânicas</p>
+    <h2>Competitivo na medida.</h2>
+    <div class="mech">
+      <div class="mc"><i data-lucide="calendar-days" class="k"></i><h3>Temporada semanal</h3><p>O placar zera <b>domingo às 22h</b>. Sempre dá pra virar.</p></div>
+      <div class="mc"><i data-lucide="gift" class="k"></i><h3>Aposta</h3><p>Na segunda vocês definem o prêmio: <b>escolher o restaurante</b>, folga da louça, filme da vez.</p></div>
+      <div class="mc"><i data-lucide="bomb" class="k"></i><h3>Tarefa bomba</h3><p>Atrasou, ganha <b>+10% por dia</b> até dobrar. Quem resolver leva o bônus.</p></div>
+      <div class="mc"><i data-lucide="zap" class="k"></i><h3>Roubo</h3><p>Reservou e não fez em 24h? Volta pro quadro, e quem pegar ganha <b>+25%</b>.</p></div>
+      <div class="mc"><i data-lucide="flame" class="k"></i><h3>Sequência</h3><p>Uma tarefa por dia sobe o multiplicador <b>+5% ao dia</b>, até ×1,3.</p></div>
+      <div class="mc"><i data-lucide="handshake" class="k"></i><h3>Meta da casa</h3><p>Uma barra conjunta. Bateu, <b>os dois ganham</b>. É o freio da rivalidade.</p></div>
+      <div class="mc"><i data-lucide="trending-up" class="k"></i><h3>Recuperação</h3><p>Quem está 20% atrás ganha <b>moedas em dobro</b>, sem mexer no placar.</p></div>
+      <div class="mc"><i data-lucide="award" class="k"></i><h3>Conquistas</h3><p>XP que nunca zera e títulos como <b>Rei do Rejunte</b> e <b>Madrugador</b>.</p></div>
+    </div>
+  </div>
+</div>
+
+<!-- CARTAS -->
+<div class="band alt">
+  <div class="wrap center">
+    <p class="kicker">Cartas de poder</p>
+    <h2>Seis cartas. Uma por dia.</h2>
+    <p class="lead wide">1 moeda a cada 10 pontos. Cada um segura até 3 cartas. As épicas são as únicas com destaque dourado.</p>
+    <div class="deck">
+      <div class="gc"><span class="k"><i data-lucide="siren"></i></span><div><span class="rar">Comum</span><b>Holofote</b><small>Transforma uma tarefa em bomba agora.</small></div><span class="cost">40</span></div>
+      <div class="gc"><span class="k"><i data-lucide="shield"></i></span><div><span class="rar">Comum</span><b>Escudo</b><small>Sua reserva não pode ser roubada por 24h.</small></div><span class="cost">50</span></div>
+      <div class="gc"><span class="k"><i data-lucide="arrow-left-right"></i></span><div><span class="rar">Rara</span><b>Troca</b><small>Troca uma tarefa sua por uma dela.</small></div><span class="cost">60</span></div>
+      <div class="gc"><span class="k"><i data-lucide="copy-plus"></i></span><div><span class="rar">Rara</span><b>Dobradinha</b><small>A próxima tarefa vale o dobro.</small></div><span class="cost">80</span></div>
+      <div class="gc ep"><span class="k"><i data-lucide="hourglass"></i></span><div><span class="rar">Épica</span><b>Hora Feliz</b><small>Por 1 hora, tudo vale ×1,5.</small></div><span class="cost">90</span></div>
+      <div class="gc ep"><span class="k"><i data-lucide="ban"></i></span><div><span class="rar">Épica</span><b>Veto</b><small>Você não pega a tarefa mais odiada da semana.</small></div><span class="cost">120</span></div>
+    </div>
+  </div>
+</div>
+
+<!-- REGRAS -->
+<div class="band">
+  <div class="wrap center">
+    <p class="kicker">Convivência</p>
+    <h2>Regras anti-treta.</h2>
+    <div class="rules">
+      <div class="rule"><i data-lucide="check-check" class="k"></i><b>Confirmação dupla</b><span>Pontos só entram quando o outro confirma. Sem resposta em 12h, confirma sozinho.</span></div>
+      <div class="rule"><i data-lucide="undo-2" class="k"></i><b>Contestar</b><span>"Não tá limpo" devolve a tarefa com comentário. Máximo de 2 por semana.</span></div>
+      <div class="rule"><i data-lucide="pause" class="k"></i><b>Modo trégua</b><span>Doença, viagem ou semana pesada: pausa a competição e tudo vira cooperativo.</span></div>
+      <div class="rule"><i data-lucide="gauge" class="k"></i><b>Teto diário</b><span>400 pontos por dia por pessoa. Nada de maratona no domingo só pra virar.</span></div>
+      <div class="rule"><i data-lucide="bell" class="k"></i><b>Provocação calibrada</b><span>Notificações em três níveis: desligada, moderada ou sem piedade.</span></div>
+    </div>
+  </div>
+</div>
+
+<!-- DESIGN -->
+<div class="band alt" id="design">
+  <div class="wrap center">
+    <p class="kicker">Identidade</p>
+    <h2>Preto, grafite e quase nada de cor.</h2>
+    <p class="lead wide">A cor só aparece quando diz algo: de quem é a tarefa, qual é a ação principal, o que está atrasado e qual é o prêmio. Cada pessoa vê o app tingido com a própria cor.</p>
+    <div class="idg">
+      <div class="box">
+        <h3>Cores</h3>
+        <div class="sws">
+          <div class="sw"><i style="background:#000000"></i><b>Preto</b><small>Fundo</small></div>
+          <div class="sw"><i style="background:#1C1C1E"></i><b>Grafite</b><small>Cartões, listas</small></div>
+          <div class="sw"><i style="background:#FFFFFF"></i><b>Branco</b><small>Texto</small></div>
+          <div class="sw"><i style="background:#0A84FF"></i><b>Azul</b><small>Vitor e ações dele</small></div>
+          <div class="sw"><i style="background:#FF9F0A"></i><b>Laranja</b><small>Ela e ações dela</small></div>
+          <div class="sw"><i style="background:#FF453A"></i><b>Vermelho</b><small>Só atraso</small></div>
+        </div>
+      </div>
+      <div class="box">
+        <h3>Tipografia e ícones</h3>
+        <div class="tline"><span style="font-size:2.4rem;font-weight:700;letter-spacing:-.05em;line-height:1">1.240</span><small>Números do placar · bold, espaçamento apertado, algarismos tabulares</small></div>
+        <div class="tline"><span style="font-size:1.6rem;font-weight:700;letter-spacing:-.035em">Tarefas</span><small>Títulos grandes alinhados à esquerda, como no iOS</small></div>
+        <div class="tline"><span style="font-size:1rem">Limpar banheiro · 45 min</span><small>Texto de interface · regular e medium</small></div>
+        <div class="tline"><span style="display:flex;gap:12px;font-size:1.4rem"><i data-lucide="utensils"></i><i data-lucide="bath"></i><i data-lucide="paw-print"></i><i data-lucide="shirt"></i><i data-lucide="shopping-cart"></i></span><small>Ícones de linha monocromáticos, sem emoji</small></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- TÉCNICA -->
+<div class="band" id="tecnica">
+  <div class="wrap center">
+    <p class="kicker">Parte técnica</p>
+    <h2>Android, com cara de iOS 26.</h2>
+    <p class="lead wide">O Android não tem Liquid Glass nativo, então o efeito é recriado no Compose. Se o celular não aguentar o blur, o app cai pra uma superfície translúcida simples.</p>
+    <div class="stack">
+      <div class="st hi">
+        <h3>Distribuição em APK</h3>
+        <span><b style="color:var(--ink)">Build:</b> APK assinado no Android Studio (<code>Build → Generate Signed APK</code>), instalado liberando fontes desconhecidas.</span>
+        <span><b style="color:var(--ink)">Atualizações:</b> Firebase App Distribution, ou o app checa o GitHub Releases e oferece o APK novo.</span>
+        <span><b style="color:var(--ink)">Keystore:</b> guarda bem. Outra chave obriga a desinstalar e perder dados locais.</span>
+        <span><b style="color:var(--ink)">Firebase:</b> funciona igual fora da loja, só cadastra o SHA-1 da chave.</span>
+      </div>
+      <div class="st"><b>Kotlin + Jetpack Compose</b><span>Telas e animações. Tema próprio em vez do Material You padrão.</span></div>
+      <div class="st"><b>Haze</b><span>Biblioteca de blur real por trás de componentes. É a base do vidro.</span></div>
+      <div class="st"><b>Shader AGSL (Android 13+)</b><span>Borda com reflexo e leve distorção, pra chegar perto da refração.</span></div>
+      <div class="st"><b>Firestore + Auth</b><span>Sincroniza os dois celulares em tempo real. Convite por código.</span></div>
+      <div class="st"><b>Cloud Functions + FCM</b><span>Pontos calculados no servidor, fechamento de temporada e notificações.</span></div>
+      <div class="st"><b>Room</b><span>Funciona offline e sincroniza depois.</span></div>
+    </div>
+  </div>
+</div>
+
+<!-- ROADMAP -->
+<div class="band alt">
+  <div class="wrap center">
+    <p class="kicker">Plano</p>
+    <h2>Do MVP ao jogo completo.</h2>
+    <div class="road">
+      <div class="rd"><span class="ph2">MVP<small>começar aqui</small></span><ul><li>Casa com convite</li><li>Tarefas com a fórmula</li><li>Reservar, concluir, validar</li><li>Placar semanal e aposta</li></ul></div>
+      <div class="rd"><span class="ph2">v1</span><ul><li>Tarefa bomba e roubo</li><li>Sequência</li><li>Meta da casa</li><li>Notificações e trégua</li></ul></div>
+      <div class="rd"><span class="ph2">v2</span><ul><li>Cartas e moedas</li><li>Níveis e conquistas</li><li>Histórico com gráficos</li><li>Widget do placar</li></ul></div>
+      <div class="rd"><span class="ph2">Depois</span><ul><li>Temporadas temáticas</li><li>Pontos pelo tempo real</li><li>Modo família</li></ul></div>
+    </div>
+  </div>
+</div>
+
+<!-- PERGUNTAS -->
+<div class="band">
+  <div class="wrap center">
+    <p class="kicker">Próxima rodada</p>
+    <h2>Pra decidir juntos.</h2>
+    <div class="qs">
+      <div class="q"><span class="n">1</span><span>Prêmio da semana combinado toda segunda, ou uma lista fixa sorteada?</span></div>
+      <div class="q"><span class="n">2</span><span>Tarefas com dono fixo (divisão justa), ou tudo livre e vence quem pegar mais?</span></div>
+      <div class="q"><span class="n">3</span><span>Quanto de provocação ela topa? Isso define se o modo "sem piedade" existe.</span></div>
+      <div class="q"><span class="n">4</span><span>Kotlin nativo ou Flutter? Dá pra trocar as Cloud Functions por FastAPI se quiser usar Python.</span></div>
+      <div class="q"><span class="n">5</span><span>Nome: "Rivais do Lar" é provisório. Outros: Placar da Casa, Faxinômetro, Duelo Doméstico.</span></div>
+    </div>
+  </div>
+</div>
+
+<footer>Rivais do Lar · conceito v0.4 · outubro de 2026 · números de exemplo</footer>
+
+<script>
+(function(){
+  try{ if(window.lucide) lucide.createIcons(); }catch(e){}
+  const $=id=>document.getElementById(id);
+  const ef=[{n:"Leve",v:1},{n:"Médio",v:1.5},{n:"Pesado",v:2}];
+  const fmt=n=>String(n).replace(".",",");
+  function fill(el){const p=(el.value-el.min)/(el.max-el.min)*100;el.style.setProperty("--v",p+"%")}
+  function calc(){
+    const m=+$("m").value, e=ef[+$("e").value], c=+$("c").value, d=+$("d").value;
+    const bomb=Math.min(1+0.1*d,2);
+    const pts=Math.max(5,Math.round(m*e.v*c*bomb/5)*5);
+    $("mo").textContent=m+" min";
+    $("eo").textContent=e.n+" · ×"+fmt(e.v);
+    $("co").textContent="×"+fmt(c.toFixed(1));
+    $("do").textContent=d+(d===1?" dia":" dias")+(d?" · ×"+fmt(bomb.toFixed(1)):"");
+    $("out").textContent=pts;
+    $("outx").textContent="pontos · "+Math.floor(pts/10)+" moedas";
+    ["m","e","c","d"].forEach(id=>fill($(id)));
+  }
+  ["m","e","c","d"].forEach(id=>$(id).addEventListener("input",calc));
+  calc();
+})();
+</script>
