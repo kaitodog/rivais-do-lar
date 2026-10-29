@@ -60,6 +60,9 @@ jobs:
           version: latest
       - name: Sobe o Supabase local e aplica as migrações
         run: supabase db start
+      # Em produção o pg_net é ativado pelo painel; sem ele o lint acusa "schema net does not exist".
+      - name: Ativa o pg_net, como no projeto de produção
+        run: psql "postgresql://postgres:postgres@127.0.0.1:54322/postgres" -c "create extension if not exists pg_net"
       - name: supabase db lint
         run: supabase db lint --level warning --fail-on error
       - name: Testes pgTAP (fórmula, fluxo, RLS)
