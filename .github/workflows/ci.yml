@@ -69,4 +69,5 @@ jobs:
       - name: supabase db lint
         run: supabase db lint --level warning --fail-on error
       - name: Testes pgTAP (fórmula, fluxo, RLS)
-        run: supabase test db
+        # Só a pasta de testes: supabase/tests/gerar_grade_pontos.sql é um gerador, não um teste.
+        run: supabase test db supabase/tests/database
