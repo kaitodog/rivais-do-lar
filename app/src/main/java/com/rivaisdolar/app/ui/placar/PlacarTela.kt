@@ -341,6 +341,18 @@ private fun Efeitos(s: CasaSnapshot, agora: Instant) {
             j.horaFelizAte?.instanteOuNull()?.takeIf { it.isAfter(agora) }?.let {
                 add(Triple("hourglass_empty", (if (meu) "Sua Hora Feliz" else "Hora Feliz de ${j.nome}") + " até " + it.atZone(zona).format(formato), true))
             }
+            if (j.cafePassado) {
+                add(Triple("coffee", if (meu) "Seu Café Passado" else "Café de ${j.nome}", false))
+            }
+            if (j.baldeAguaFria) {
+                add(Triple("water_drop", if (meu) "Balde na sua próxima tarefa" else "Balde em ${j.nome}", false))
+            }
+            j.seguroAte?.instanteOuNull()?.takeIf { it.isAfter(agora) }?.let {
+                add(Triple("verified_user", (if (meu) "Seu Seguro" else "Seguro de ${j.nome}") + " até " + it.atZone(zona).format(formato), true))
+            }
+            j.notaFiscalAte?.instanteOuNull()?.takeIf { it.isAfter(agora) }?.let {
+                add(Triple("request_quote", (if (meu) "Sua Nota Fiscal" else "Nota de ${j.nome}") + " até " + it.atZone(zona).format(formato), true))
+            }
         }
     }
     if (chips.isEmpty()) return

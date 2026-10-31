@@ -579,5 +579,52 @@ fun ColumnScope.FolhaUsarCarta(carta: Carta, s: CasaSnapshot, agora: Instant, vm
             habilitado = s.eu?.dobradinha != true,
             carregando = ocupado,
         )
+        TipoCarta.CafePassado -> {
+            Texto(
+                "Vale +25% na próxima tarefa de até 30 min (máx. +25).",
+                Tipo.pequeno,
+                Modifier.fillMaxWidth(),
+                alinhamento = TextAlign.Center,
+            )
+            BotaoCapsula(
+                if (s.eu?.cafePassado == true) "Café já armado" else "Tomar o café",
+                usar,
+                habilitado = s.eu?.cafePassado != true,
+                carregando = ocupado,
+            )
+        }
+        TipoCarta.Seguro -> {
+            Texto(
+                "Bloqueia o próximo ataque (Balde, Cobrança ou Arrastão) por 24h.",
+                Tipo.pequeno,
+                Modifier.fillMaxWidth(),
+                alinhamento = TextAlign.Center,
+            )
+            BotaoCapsula("Armar Seguro", usar, carregando = ocupado)
+        }
+        TipoCarta.Balde -> {
+            Texto(
+                "A próxima tarefa de ${s.outro?.nome ?: "rival"} vale −25% (máx. −20).",
+                Tipo.pequeno,
+                Modifier.fillMaxWidth(),
+                alinhamento = TextAlign.Center,
+            )
+            BotaoCapsula("Jogar o balde", usar, carregando = ocupado)
+        }
+        TipoCarta.Cobranca -> {
+            Texto(
+                "Rouba 15 pontos agora. ${s.outro?.nome ?: "O rival"} recebe uma Nota Fiscal para cobrar 15 de volta em 24h.",
+                Tipo.pequeno,
+                Modifier.fillMaxWidth(),
+                alinhamento = TextAlign.Center,
+            )
+            BotaoCapsula("Cobrar 15 pontos", usar, carregando = ocupado, tinta = Cores.Alerta)
+        }
+        TipoCarta.Arrastao -> Texto(
+            "A decisiva é usada direto na aba Cartas.",
+            Tipo.pequenoSecundario,
+            Modifier.fillMaxWidth(),
+            alinhamento = TextAlign.Center,
+        )
     }
 }

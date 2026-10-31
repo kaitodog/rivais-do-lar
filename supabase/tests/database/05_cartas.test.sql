@@ -32,7 +32,7 @@ $$;
 -- Loja --------------------------------------------------------------------------------------
 set local role authenticated;
 set local request.jwt.claims = '{"sub": "11111111-1111-1111-1111-111111111111"}';
-select throws_ok($$select public.comprar_carta('veto')$$, 'P0001', 'Faltam 120 moedas para essa carta.', 'sem moedas não compra');
+select throws_ok($$select public.comprar_carta('veto')$$, 'P0001', 'Faltam 30 moedas para essa carta.', 'sem moedas não compra');
 reset role;
 update public.membros set moedas = 1000 where user_id = '11111111-1111-1111-1111-111111111111';
 set local role authenticated;
@@ -42,7 +42,7 @@ insert into m select tipo, id from public.comprar_carta('hora_feliz');
 insert into m select tipo, id from public.comprar_carta('holofote');
 select throws_ok($$select public.comprar_carta('escudo')$$, 'P0001', 'Sua mão já tem 3 cartas. Use uma antes de comprar outra.', 'mão máxima de 3');
 reset role;
-select is((select moedas from public.membros where user_id = '11111111-1111-1111-1111-111111111111'), 1000 - 80 - 90 - 40, 'compras descontam as moedas');
+select is((select moedas from public.membros where user_id = '11111111-1111-1111-1111-111111111111'), 1000 - 40 - 45 - 15, 'compras descontam as moedas');
 select is((select raridade from public.cartas where tipo = 'hora_feliz'), 'epica', 'Hora Feliz é épica');
 
 -- Dobradinha --------------------------------------------------------------------------------

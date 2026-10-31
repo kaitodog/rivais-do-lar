@@ -47,6 +47,7 @@ import com.rivaisdolar.app.ui.components.BotaoTexto
 import com.rivaisdolar.app.ui.components.CartaoSolido
 import com.rivaisdolar.app.ui.components.Divisoria
 import com.rivaisdolar.app.ui.components.Grupo
+import com.rivaisdolar.app.ui.components.IconeTarefa
 import com.rivaisdolar.app.ui.components.Linha
 import com.rivaisdolar.app.ui.components.Secao
 import com.rivaisdolar.app.ui.components.Simbolo
@@ -295,6 +296,8 @@ fun CartasTela(
     ocupado: Boolean,
     aoUsar: (Carta) -> Unit,
     aoComprar: (TipoCarta) -> Unit,
+    aoArrastao: () -> Unit = {},
+    aoNotaFiscal: () -> Unit = {},
 ) {
     val moedas = s.eu?.moedas ?: 0
     val mao = s.mao()
@@ -313,6 +316,14 @@ fun CartasTela(
                     "hourglass_empty" to
                         ((if (meu) "Sua Hora Feliz" else "Hora Feliz de ${j.nome}") + " até " + ate.atZone(zona).format(formatoHora)),
                 )
+            }
+            if (j.cafePassado) add("coffee" to if (meu) "Seu Café Passado armado" else "Café de ${j.nome}")
+            if (j.baldeAguaFria) add("water_drop" to if (meu) "Balde na sua próxima tarefa" else "Balde em ${j.nome}")
+            j.seguroAte?.instanteOuNull()?.takeIf { it.isAfter(agora) }?.let { ate ->
+                add("verified_user" to ((if (meu) "Seu Seguro" else "Seguro de ${j.nome}") + " até " + ate.atZone(zona).format(formatoHora)))
+            }
+            j.notaFiscalAte?.instanteOuNull()?.takeIf { it.isAfter(agora) }?.let { ate ->
+                add("request_quote" to ((if (meu) "Sua Nota Fiscal" else "Nota de ${j.nome}") + " até " + ate.atZone(zona).format(formatoHora)))
             }
         }
     }
@@ -383,10 +394,38 @@ fun CartasTela(
                 }
             }
         }
+        item { Secao("Decisiva da temporada", Modifier.padding(top = 4.dp)) }
+        item {
+            CartaoSolido {
+                Row(Modifier.padding(14.dp), verticalAlignment = Alignment.CenterVertically) {
+                    IconeTarefa("weekend", cor = Cores.Ouro)
+                    Column(Modifier.weight(1f).padding(start = 10.dp)) {
+                        Texto("Arrastão do Sofá", Tipo.tituloCartao)
+                        Texto("Rouba até 30 pontos · 1 por temporada", Tipo.subtitulo)
+                    }
+                    BotaoTexto("Usar", aoArrastao, cor = Cores.Ouro, habilitado = !ocupado)
+                }
+            }
+        }
+        if (s.eu?.notaFiscalAte?.instanteOuNull()?.isAfter(agora) == true) {
+            item { Secao("Nota Fiscal", Modifier.padding(top = 4.dp)) }
+            item {
+                CartaoSolido {
+                    Row(Modifier.padding(14.dp), verticalAlignment = Alignment.CenterVertically) {
+                        IconeTarefa("request_quote", cor = Cores.Ouro)
+                        Column(Modifier.weight(1f).padding(start = 10.dp)) {
+                            Texto("Cobrança de Aluguel", Tipo.tituloCartao)
+                            Texto("Cobre 15 pontos de volta antes de expirar", Tipo.subtitulo)
+                        }
+                        BotaoTexto("Cobrar", aoNotaFiscal, cor = Cores.Ouro, habilitado = !ocupado)
+                    }
+                }
+            }
+        }
         item { Secao("Loja", Modifier.padding(top = 4.dp)) }
         item {
             Grupo {
-                TipoCarta.entries.forEachIndexed { i, c ->
+                TipoCarta.entries.filter { it != TipoCarta.Arrastao }.forEachIndexed { i, c ->
                     if (i > 0) Divisoria()
                     val pode = moedas >= c.custo && mao.size < TipoCarta.MAO_MAXIMA && !ocupado
                     Linha(

@@ -130,6 +130,10 @@ class JogoViewModel @Inject constructor(
         executar(aviso, ok) { repo.usarCarta(carta, alvo, alvo2) }
     }
 
+    fun usarArrastao() = executar("Arrastão! Pontos puxados do rival.", { }) { repo.usarDecisiva("arrastao") }
+
+    fun usarNotaFiscal() = executar("Nota Fiscal cobrada. 15 pontos de volta.", { }) { repo.usarNotaFiscal() }
+
     override fun responderTroca(troca: Troca, aceitar: Boolean, ok: () -> Unit) =
         executar(if (aceitar) "Troca aceita." else "Troca recusada.", ok) { repo.responderTroca(troca, aceitar) }
 

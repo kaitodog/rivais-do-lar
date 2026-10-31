@@ -76,6 +76,10 @@ data class Jogador(
     val provocacao: String,
     val dobradinha: Boolean = false,
     val horaFelizAte: String? = null,
+    val cafePassado: Boolean = false,
+    val baldeAguaFria: Boolean = false,
+    val seguroAte: String? = null,
+    val notaFiscalAte: String? = null,
 )
 
 @Serializable
@@ -320,6 +324,10 @@ class CasaRepository @Inject constructor(
                     provocacao = it.nivelProvocacao,
                     dobradinha = it.dobradinha,
                     horaFelizAte = it.horaFelizAte,
+                    cafePassado = it.cafePassado,
+                    baldeAguaFria = it.baldeAguaFria,
+                    seguroAte = it.seguroAte,
+                    notaFiscalAte = it.notaFiscalAte,
                 )
             },
             tarefas = tarefas.await(),
@@ -504,6 +512,14 @@ class CasaRepository @Inject constructor(
     // Cartas e trocas --------------------------------------------------------------------------
 
     suspend fun comprarCarta(tipo: String) = rpc("comprar_carta", buildJsonObject { put("p_tipo", tipo) }, "Comprar carta")
+
+    /** Arrastão do Sofá: decisiva grátis, uma por temporada. */
+    suspend fun usarDecisiva(tipo: String) =
+        rpc("usar_decisiva", buildJsonObject { put("p_tipo", tipo) }, "Usar decisiva")
+
+    /** Nota Fiscal recebida na Cobrança de Aluguel: cobra 15 de volta. */
+    suspend fun usarNotaFiscal() =
+        rpc("usar_nota_fiscal", buildJsonObject { }, "Usar Nota Fiscal")
 
     suspend fun usarCarta(carta: Carta, alvo: String? = null, alvo2: String? = null) =
         rpc(

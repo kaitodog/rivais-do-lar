@@ -71,6 +71,10 @@ data class Membro(
     @SerialName("nivel_provocacao") val nivelProvocacao: String = "moderada",
     val dobradinha: Boolean = false,
     @SerialName("hora_feliz_ate") val horaFelizAte: String? = null,
+    @SerialName("cafe_passado") val cafePassado: Boolean = false,
+    @SerialName("balde_agua_fria") val baldeAguaFria: Boolean = false,
+    @SerialName("seguro_ate") val seguroAte: String? = null,
+    @SerialName("nota_fiscal_ate") val notaFiscalAte: String? = null,
 )
 
 @Serializable

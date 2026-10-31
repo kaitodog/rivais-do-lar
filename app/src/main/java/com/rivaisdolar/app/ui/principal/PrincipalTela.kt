@@ -166,6 +166,8 @@ fun PrincipalTela(
                         vm.comprar(it)
                         juice.disparar(EventoJuice.Compra)
                     },
+                    aoArrastao = { vm.usarArrastao() },
+                    aoNotaFiscal = { vm.usarNotaFiscal() },
                 )
             }
         }

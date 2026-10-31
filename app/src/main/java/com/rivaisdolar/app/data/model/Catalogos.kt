@@ -9,12 +9,17 @@ enum class TipoCarta(
     val icone: String,
     val efeito: String,
 ) {
-    Holofote("holofote", "Holofote", "Comum", 40, "e911_emergency", "Transforma uma tarefa em bomba agora."),
-    Escudo("escudo", "Escudo", "Comum", 50, "shield", "Sua reserva não pode ser roubada por 24h."),
-    Troca("troca", "Troca", "Rara", 60, "swap_horiz", "Troca uma reserva sua por uma da outra pessoa."),
-    Dobradinha("dobradinha", "Dobradinha", "Rara", 80, "library_add", "A próxima tarefa vale o dobro."),
-    HoraFeliz("hora_feliz", "Hora Feliz", "Épica", 90, "hourglass_empty", "Por 1 hora, tudo o que você fizer vale x1,5."),
-    Veto("veto", "Veto", "Épica", 120, "block", "Você não pega a tarefa mais odiada da semana.");
+    Holofote("holofote", "Holofote", "Comum", 15, "e911_emergency", "Transforma uma tarefa em bomba agora."),
+    Escudo("escudo", "Escudo", "Comum", 20, "shield", "Sua reserva não pode ser roubada por 24h."),
+    Troca("troca", "Troca", "Rara", 25, "swap_horiz", "Troca uma reserva sua por uma da outra pessoa."),
+    Dobradinha("dobradinha", "Dobradinha", "Rara", 40, "library_add", "A próxima tarefa vale o dobro."),
+    HoraFeliz("hora_feliz", "Hora Feliz", "Épica", 45, "hourglass_empty", "Por 1 hora, tudo o que você fizer vale x1,5."),
+    Veto("veto", "Veto", "Épica", 30, "block", "Você não pega a tarefa mais odiada da semana."),
+    CafePassado("cafe_passado", "Café Passado", "Comum", 15, "coffee", "+25% na próxima tarefa de até 30 min (máx. +25)."),
+    Seguro("seguro", "Seguro Antissacanagem", "Comum", 15, "shield", "Bloqueia o próximo ataque por 24h."),
+    Balde("balde", "Balde de Água Fria", "Comum", 20, "water_drop", "−25% na próxima tarefa do rival (máx. −20)."),
+    Cobranca("cobranca", "Cobrança de Aluguel", "Rara", 30, "request_quote", "Rouba 15 pontos; o rival pode cobrar de volta em 24h."),
+    Arrastao("arrastao", "Arrastão do Sofá", "Decisiva", 0, "weekend", "Rouba até 30 pontos. Uma vez por temporada.");
 
     val epica: Boolean get() = raridade == "Épica"
 
