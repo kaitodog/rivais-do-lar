@@ -34,8 +34,8 @@ android {
         applicationId = "com.rivaisdolar.app"
         minSdk = 26
         targetSdk = 37
-        versionCode = (project.findProperty("versionCode") as String?)?.toInt() ?: 501
-        versionName = (project.findProperty("versionName") as String?) ?: "0.5.1"
+        versionCode = (project.findProperty("versionCode") as String?)?.toInt() ?: 502
+        versionName = (project.findProperty("versionName") as String?) ?: "0.5.2"
 
         buildConfigField("String", "SUPABASE_URL", "\"${secret("SUPABASE_URL")}\"")
         buildConfigField("String", "SUPABASE_ANON_KEY", "\"${secret("SUPABASE_ANON_KEY")}\"")
