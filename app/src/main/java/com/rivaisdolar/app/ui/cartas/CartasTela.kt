@@ -298,6 +298,8 @@ fun CartasTela(
     aoComprar: (TipoCarta) -> Unit,
     aoArrastao: () -> Unit = {},
     aoNotaFiscal: () -> Unit = {},
+    aoCumprirCastigo: (String) -> Unit = {},
+    aoCumprirVale: (String) -> Unit = {},
 ) {
     val moedas = s.eu?.moedas ?: 0
     val mao = s.mao()
@@ -394,6 +396,47 @@ fun CartasTela(
                 }
             }
         }
+        val meusCastigos = s.castigos.filter { it.alvo == s.meuId && it.status == "pendente" }
+        if (meusCastigos.isNotEmpty()) {
+            item { Secao("Castigos", Modifier.padding(top = 4.dp)) }
+            meusCastigos.forEach { c ->
+                item(key = "castigo-${c.id}") {
+                    CartaoSolido {
+                        Row(Modifier.padding(14.dp), verticalAlignment = Alignment.CenterVertically) {
+                            IconeTarefa("cleaning_services", cor = Cores.Alerta)
+                            Column(Modifier.weight(1f).padding(start = 10.dp)) {
+                                Texto(c.descricao, Tipo.tituloCartao, linhas = 2)
+                                Texto(
+                                    "até ${c.prazo.instanteOuNull()?.relativo(agora) ?: ""} · −${c.pontos} se não cumprir",
+                                    Tipo.subtitulo,
+                                )
+                            }
+                            BotaoTexto("Cumprir", { aoCumprirCastigo(c.id) }, cor = Cores.Ouro, habilitado = !ocupado)
+                        }
+                    }
+                }
+            }
+        }
+
+        val meusVales = s.vales.filter { it.alvo == s.meuId && it.status == "pendente" }
+        if (meusVales.isNotEmpty()) {
+            item { Secao("Vales-favor", Modifier.padding(top = 4.dp)) }
+            meusVales.forEach { v ->
+                item(key = "vale-${v.id}") {
+                    CartaoSolido {
+                        Row(Modifier.padding(14.dp), verticalAlignment = Alignment.CenterVertically) {
+                            IconeTarefa("redeem", cor = Cores.Ouro)
+                            Column(Modifier.weight(1f).padding(start = 10.dp)) {
+                                Texto(v.descricao, Tipo.tituloCartao, linhas = 2)
+                                Texto("Dívida de favor · sem pontos", Tipo.subtitulo)
+                            }
+                            BotaoTexto("Cumprir", { aoCumprirVale(v.id) }, cor = Cores.Ouro, habilitado = !ocupado)
+                        }
+                    }
+                }
+            }
+        }
+
         item { Secao("Decisiva da temporada", Modifier.padding(top = 4.dp)) }
         item {
             CartaoSolido {

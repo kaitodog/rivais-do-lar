@@ -518,6 +518,7 @@ fun ColumnScope.FolhaUsarCarta(carta: Carta, s: CasaSnapshot, agora: Instant, vm
     val tipo = TipoCarta.de(carta.tipo) ?: return
     var alvo by remember(carta.id) { mutableStateOf<String?>(null) }
     var alvo2 by remember(carta.id) { mutableStateOf<String?>(null) }
+    var texto by remember(carta.id) { mutableStateOf("") }
     val juice = LocalJuice.current
     val usar = { vm.usarCarta(carta, alvo, alvo2) { juice.disparar(EventoJuice.Carta); aoFechar() } }
 
@@ -619,6 +620,38 @@ fun ColumnScope.FolhaUsarCarta(carta: Carta, s: CasaSnapshot, agora: Instant, vm
                 alinhamento = TextAlign.Center,
             )
             BotaoCapsula("Cobrar 15 pontos", usar, carregando = ocupado, tinta = Cores.Alerta)
+        }
+        TipoCarta.Castigo -> {
+            Texto(
+                "A pessoa tem 24h para cumprir. Se não cumprir, perde 15 pontos.",
+                Tipo.pequeno,
+                Modifier.fillMaxWidth(),
+                alinhamento = TextAlign.Center,
+            )
+            CampoTexto(texto, { texto = it.take(80) }, "Ex.: lavar o banheiro até amanhã", sublinhado = true)
+            BotaoCapsula(
+                "Enviar castigo",
+                { vm.usarCastigo(texto) { aoFechar() } },
+                habilitado = texto.trim().length >= 3,
+                carregando = ocupado,
+                tinta = Cores.Alerta,
+            )
+        }
+        TipoCarta.Vale -> {
+            Texto(
+                "Sem pontos: só uma dívida de favor que a pessoa marca como cumprida.",
+                Tipo.pequeno,
+                Modifier.fillMaxWidth(),
+                alinhamento = TextAlign.Center,
+            )
+            CampoTexto(texto, { texto = it.take(80) }, "Ex.: café da manhã no domingo", sublinhado = true)
+            BotaoCapsula(
+                "Enviar vale-favor",
+                { vm.usarVale(texto) { aoFechar() } },
+                habilitado = texto.trim().length >= 3,
+                carregando = ocupado,
+                estilo = EstiloBotao.Ouro,
+            )
         }
         TipoCarta.Arrastao -> Texto(
             "A decisiva é usada direto na aba Cartas.",

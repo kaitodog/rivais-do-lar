@@ -43,6 +43,32 @@ data class TipoOcorrenciaNova(
     val icone: String,
 )
 
+@Serializable
+data class Castigo(
+    val id: String,
+    @SerialName("casa_id") val casaId: String,
+    val autor: String,
+    val alvo: String,
+    val descricao: String,
+    val pontos: Int = 15,
+    val prazo: String,
+    val status: String = "pendente",
+    @SerialName("criado_em") val criadoEm: String,
+    @SerialName("resolvido_em") val resolvidoEm: String? = null,
+)
+
+@Serializable
+data class Vale(
+    val id: String,
+    @SerialName("casa_id") val casaId: String,
+    val autor: String,
+    val alvo: String,
+    val descricao: String,
+    val status: String = "pendente",
+    @SerialName("criado_em") val criadoEm: String,
+    @SerialName("resolvido_em") val resolvidoEm: String? = null,
+)
+
 /** Um flagra já aplicado: o alvo perdeu os pontos na hora. */
 @Serializable
 data class Ocorrencia(

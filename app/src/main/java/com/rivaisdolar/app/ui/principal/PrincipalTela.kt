@@ -168,6 +168,8 @@ fun PrincipalTela(
                     },
                     aoArrastao = { vm.usarArrastao() },
                     aoNotaFiscal = { vm.usarNotaFiscal() },
+                    aoCumprirCastigo = { vm.cumprirCastigo(it) },
+                    aoCumprirVale = { vm.cumprirVale(it) },
                 )
             }
         }

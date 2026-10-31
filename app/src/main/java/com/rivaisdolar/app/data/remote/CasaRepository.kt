@@ -9,6 +9,7 @@ import com.rivaisdolar.app.data.local.CacheDao
 import com.rivaisdolar.app.data.local.CacheEntity
 import com.rivaisdolar.app.data.model.Carta
 import com.rivaisdolar.app.data.model.Casa
+import com.rivaisdolar.app.data.model.Castigo
 import com.rivaisdolar.app.data.model.Conquista
 import com.rivaisdolar.app.data.model.Notificacao
 import com.rivaisdolar.app.data.model.Ocorrencia
@@ -22,6 +23,7 @@ import com.rivaisdolar.app.data.model.TarefaNova
 import com.rivaisdolar.app.data.model.Temporada
 import com.rivaisdolar.app.data.model.TipoOcorrencia
 import com.rivaisdolar.app.data.model.TipoOcorrenciaNova
+import com.rivaisdolar.app.data.model.Vale
 import com.rivaisdolar.app.data.model.Troca
 import com.rivaisdolar.app.widget.WidgetPlacar
 import com.rivaisdolar.app.di.EscopoApp
@@ -98,6 +100,8 @@ data class CasaSnapshot(
     val notificacoes: List<Notificacao> = emptyList(),
     val tiposVistoria: List<TipoOcorrencia> = emptyList(),
     val ocorrencias: List<Ocorrencia> = emptyList(),
+    val castigos: List<Castigo> = emptyList(),
+    val vales: List<Vale> = emptyList(),
 ) {
     val eu: Jogador? get() = jogadores.firstOrNull { it.userId == meuId }
     val outro: Jogador? get() = jogadores.firstOrNull { it.userId != meuId }
@@ -303,6 +307,20 @@ class CasaRepository @Inject constructor(
                 limit(60)
             }.decodeList<Ocorrencia>()
         }
+        val castigos = async {
+            c.from("castigos").select {
+                filter { eq("casa_id", casaId) }
+                order("criado_em", Order.DESCENDING)
+                limit(30)
+            }.decodeList<Castigo>()
+        }
+        val vales = async {
+            c.from("vales").select {
+                filter { eq("casa_id", casaId) }
+                order("criado_em", Order.DESCENDING)
+                limit(30)
+            }.decodeList<Vale>()
+        }
 
         val listaMembros = membros.await()
         val perfis = c.from("profiles").select { filter { isIn("id", listaMembros.map { it.userId }) } }
@@ -341,6 +359,8 @@ class CasaRepository @Inject constructor(
             notificacoes = notificacoes.await(),
             tiposVistoria = tiposVistoria.await(),
             ocorrencias = ocorrencias.await(),
+            castigos = castigos.await(),
+            vales = vales.await(),
         )
     }
 
@@ -353,7 +373,7 @@ class CasaRepository @Inject constructor(
         val novo = c.channel("casa-$casaId")
         val mudancas = listOf(
             "tarefas", "registros", "temporadas", "membros", "cartas", "trocas", "conquistas",
-            "ocorrencia_tipos", "ocorrencias",
+            "ocorrencia_tipos", "ocorrencias", "castigos", "vales",
         ).map { tabela ->
             novo.postgresChangeFlow<PostgresAction>(schema = "public") {
                 table = tabela
@@ -520,6 +540,18 @@ class CasaRepository @Inject constructor(
     /** Nota Fiscal recebida na Cobrança de Aluguel: cobra 15 de volta. */
     suspend fun usarNotaFiscal() =
         rpc("usar_nota_fiscal", buildJsonObject { }, "Usar Nota Fiscal")
+
+    suspend fun usarCastigo(descricao: String) =
+        rpc("usar_castigo", buildJsonObject { put("p_descricao", descricao) }, "Enviar castigo")
+
+    suspend fun cumprirCastigo(id: String) =
+        rpc("cumprir_castigo", buildJsonObject { put("p_id", id) }, "Cumprir castigo")
+
+    suspend fun usarVale(descricao: String) =
+        rpc("usar_vale", buildJsonObject { put("p_descricao", descricao) }, "Enviar vale")
+
+    suspend fun cumprirVale(id: String) =
+        rpc("cumprir_vale", buildJsonObject { put("p_id", id) }, "Cumprir vale")
 
     suspend fun usarCarta(carta: Carta, alvo: String? = null, alvo2: String? = null) =
         rpc(

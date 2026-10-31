@@ -19,6 +19,8 @@ enum class TipoCarta(
     Seguro("seguro", "Seguro Antissacanagem", "Comum", 15, "shield", "Bloqueia o próximo ataque por 24h."),
     Balde("balde", "Balde de Água Fria", "Comum", 20, "water_drop", "−25% na próxima tarefa do rival (máx. −20)."),
     Cobranca("cobranca", "Cobrança de Aluguel", "Rara", 30, "request_quote", "Rouba 15 pontos; o rival pode cobrar de volta em 24h."),
+    Castigo("castigo", "Castigo da Casa", "Comum", 20, "cleaning_services", "O rival tem 24h para cumprir ou perde 15 pontos."),
+    Vale("vale", "Vale-favor", "Comum", 10, "redeem", "Deixa uma dívida de favor. Sem pontos, só a honra."),
     Arrastao("arrastao", "Arrastão do Sofá", "Decisiva", 0, "weekend", "Rouba até 30 pontos. Uma vez por temporada.");
 
     val epica: Boolean get() = raridade == "Épica"

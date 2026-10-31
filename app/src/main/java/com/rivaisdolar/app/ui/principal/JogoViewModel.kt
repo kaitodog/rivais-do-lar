@@ -39,6 +39,8 @@ interface AcoesJogo {
     fun removerTarefa(id: String, ok: () -> Unit = {})
     fun comprar(tipo: TipoCarta, ok: () -> Unit = {})
     fun usarCarta(carta: Carta, alvo: String? = null, alvo2: String? = null, ok: () -> Unit = {})
+    fun usarCastigo(descricao: String, ok: () -> Unit = {}) = Unit
+    fun usarVale(descricao: String, ok: () -> Unit = {}) = Unit
     fun responderTroca(troca: Troca, aceitar: Boolean, ok: () -> Unit = {})
     fun recusasNaSemana(): Int
     fun marcarLidas()
@@ -133,6 +135,18 @@ class JogoViewModel @Inject constructor(
     fun usarArrastao() = executar("Arrastão! Pontos puxados do rival.", { }) { repo.usarDecisiva("arrastao") }
 
     fun usarNotaFiscal() = executar("Nota Fiscal cobrada. 15 pontos de volta.", { }) { repo.usarNotaFiscal() }
+
+    override fun usarCastigo(descricao: String, ok: () -> Unit) =
+        executar("Castigo enviado. 24h para cumprir.", ok) { repo.usarCastigo(descricao) }
+
+    fun cumprirCastigo(id: String) =
+        executar("Castigo cumprido. Sem multa.", { }) { repo.cumprirCastigo(id) }
+
+    override fun usarVale(descricao: String, ok: () -> Unit) =
+        executar("Vale-favor enviado.", ok) { repo.usarVale(descricao) }
+
+    fun cumprirVale(id: String) =
+        executar("Vale cumprido. A honra agradece.", { }) { repo.cumprirVale(id) }
 
     override fun responderTroca(troca: Troca, aceitar: Boolean, ok: () -> Unit) =
         executar(if (aceitar) "Troca aceita." else "Troca recusada.", ok) { repo.responderTroca(troca, aceitar) }
