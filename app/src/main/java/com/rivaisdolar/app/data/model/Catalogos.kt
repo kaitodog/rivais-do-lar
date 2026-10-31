@@ -21,6 +21,11 @@ enum class TipoCarta(
     Cobranca("cobranca", "Cobrança de Aluguel", "Rara", 30, "request_quote", "Rouba 15 pontos; o rival pode cobrar de volta em 24h."),
     Castigo("castigo", "Castigo da Casa", "Comum", 20, "cleaning_services", "O rival tem 24h para cumprir ou perde 15 pontos."),
     Vale("vale", "Vale-favor", "Comum", 10, "redeem", "Deixa uma dívida de favor. Sem pontos, só a honra."),
+    Pedagio("pedagio", "Pedágio Doméstico", "Rara", 25, "toll", "Rouba 10 pontos do rival agora."),
+    MaoAtada("mao_atada", "Mão Atada", "Rara", 25, "pan_tool", "O rival fica 12h sem usar cartas ofensivas."),
+    RouboCena("roubo_cena", "Roubo de Cena", "Rara", 20, "theater_comedy", "Marca uma tarefa livre: quem concluir em 24h leva +30."),
+    Combo("combo", "Combo da Casa", "Comum", 20, "category", "+30 ao completar 3 categorias distintas em 24h."),
+    Dobrou("dobrou", "Dobrou ou Danou", "Rara", 25, "casino", "Tarefa sua de 40+ pontos: +40 se concluir em 12h, −20 se falhar."),
     Arrastao("arrastao", "Arrastão do Sofá", "Decisiva", 0, "weekend", "Rouba até 30 pontos. Uma vez por temporada.");
 
     val epica: Boolean get() = raridade == "Épica"

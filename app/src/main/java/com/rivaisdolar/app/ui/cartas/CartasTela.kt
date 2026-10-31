@@ -327,6 +327,12 @@ fun CartasTela(
             j.notaFiscalAte?.instanteOuNull()?.takeIf { it.isAfter(agora) }?.let { ate ->
                 add("request_quote" to ((if (meu) "Sua Nota Fiscal" else "Nota de ${j.nome}") + " até " + ate.atZone(zona).format(formatoHora)))
             }
+            j.maoAtadaAte?.instanteOuNull()?.takeIf { it.isAfter(agora) }?.let { ate ->
+                add("pan_tool" to ((if (meu) "Sua Mão Atada" else "Mão de ${j.nome} atada") + " até " + ate.atZone(zona).format(formatoHora)))
+            }
+            j.comboAte?.instanteOuNull()?.takeIf { it.isAfter(agora) }?.let { ate ->
+                add("category" to ((if (meu) "Seu Combo" else "Combo de ${j.nome}") + " até " + ate.atZone(zona).format(formatoHora)))
+            }
         }
     }
 
@@ -431,6 +437,28 @@ fun CartasTela(
                                 Texto("Dívida de favor · sem pontos", Tipo.subtitulo)
                             }
                             BotaoTexto("Cumprir", { aoCumprirVale(v.id) }, cor = Cores.Ouro, habilitado = !ocupado)
+                        }
+                    }
+                }
+            }
+        }
+
+        val meusDesafios = s.desafios.filter { it.userId == s.meuId && it.status == "pendente" }
+        if (meusDesafios.isNotEmpty()) {
+            item { Secao("Dobrou ou Danou", Modifier.padding(top = 4.dp)) }
+            meusDesafios.forEach { d ->
+                item(key = "desafio-${d.id}") {
+                    val titulo = s.tarefas.firstOrNull { it.id == d.tarefaId }?.titulo ?: "Tarefa"
+                    CartaoSolido {
+                        Row(Modifier.padding(14.dp), verticalAlignment = Alignment.CenterVertically) {
+                            IconeTarefa("casino", cor = Cores.Alerta)
+                            Column(Modifier.weight(1f).padding(start = 10.dp)) {
+                                Texto(titulo, Tipo.tituloCartao, linhas = 2)
+                                Texto(
+                                    "até ${d.prazo.instanteOuNull()?.relativo(agora) ?: ""} · +${d.sucesso} se concluir, −${d.falha} se falhar",
+                                    Tipo.subtitulo,
+                                )
+                            }
                         }
                     }
                 }

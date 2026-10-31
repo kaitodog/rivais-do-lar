@@ -229,10 +229,11 @@ fun PlacarTela(
 fun LinhaTarefa(t: Tarefa, s: CasaSnapshot, agora: Instant, doPlacar: Boolean, aoTocar: () -> Unit) {
     val bomba = t.bomba(agora) && t.status != "aguardando"
     val leg = legenda(t, s, agora, doPlacar)
+    val cena = t.cenaAte?.instanteOuNull()?.isAfter(agora) == true
     val dono = s.jogador(t.reservadaPor)
     Linha(
         titulo = t.titulo,
-        subtitulo = leg.texto,
+        subtitulo = if (cena) "${leg.texto} · Cena +30" else leg.texto,
         corSubtitulo = leg.cor,
         inicio = { IconeTarefa(t.icone, bomba = bomba) },
         depoisDoTitulo = if (dono != null && t.status != "livre") ({ Ponto(Cores.jogador(dono.cor)) }) else null,
@@ -352,6 +353,12 @@ private fun Efeitos(s: CasaSnapshot, agora: Instant) {
             }
             j.notaFiscalAte?.instanteOuNull()?.takeIf { it.isAfter(agora) }?.let {
                 add(Triple("request_quote", (if (meu) "Sua Nota Fiscal" else "Nota de ${j.nome}") + " até " + it.atZone(zona).format(formato), true))
+            }
+            j.maoAtadaAte?.instanteOuNull()?.takeIf { it.isAfter(agora) }?.let {
+                add(Triple("pan_tool", (if (meu) "Sua Mão Atada" else "Mão de ${j.nome} atada") + " até " + it.atZone(zona).format(formato), false))
+            }
+            j.comboAte?.instanteOuNull()?.takeIf { it.isAfter(agora) }?.let {
+                add(Triple("category", (if (meu) "Seu Combo" else "Combo de ${j.nome}") + " até " + it.atZone(zona).format(formato), true))
             }
         }
     }

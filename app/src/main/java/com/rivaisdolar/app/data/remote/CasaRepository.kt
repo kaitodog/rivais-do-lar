@@ -10,6 +10,7 @@ import com.rivaisdolar.app.data.local.CacheEntity
 import com.rivaisdolar.app.data.model.Carta
 import com.rivaisdolar.app.data.model.Casa
 import com.rivaisdolar.app.data.model.Castigo
+import com.rivaisdolar.app.data.model.Desafio
 import com.rivaisdolar.app.data.model.Conquista
 import com.rivaisdolar.app.data.model.Notificacao
 import com.rivaisdolar.app.data.model.Ocorrencia
@@ -82,6 +83,8 @@ data class Jogador(
     val baldeAguaFria: Boolean = false,
     val seguroAte: String? = null,
     val notaFiscalAte: String? = null,
+    val maoAtadaAte: String? = null,
+    val comboAte: String? = null,
 )
 
 @Serializable
@@ -102,6 +105,7 @@ data class CasaSnapshot(
     val ocorrencias: List<Ocorrencia> = emptyList(),
     val castigos: List<Castigo> = emptyList(),
     val vales: List<Vale> = emptyList(),
+    val desafios: List<Desafio> = emptyList(),
 ) {
     val eu: Jogador? get() = jogadores.firstOrNull { it.userId == meuId }
     val outro: Jogador? get() = jogadores.firstOrNull { it.userId != meuId }
@@ -321,6 +325,13 @@ class CasaRepository @Inject constructor(
                 limit(30)
             }.decodeList<Vale>()
         }
+        val desafios = async {
+            c.from("desafios").select {
+                filter { eq("casa_id", casaId) }
+                order("criado_em", Order.DESCENDING)
+                limit(30)
+            }.decodeList<Desafio>()
+        }
 
         val listaMembros = membros.await()
         val perfis = c.from("profiles").select { filter { isIn("id", listaMembros.map { it.userId }) } }
@@ -346,6 +357,8 @@ class CasaRepository @Inject constructor(
                     baldeAguaFria = it.baldeAguaFria,
                     seguroAte = it.seguroAte,
                     notaFiscalAte = it.notaFiscalAte,
+                    maoAtadaAte = it.maoAtadaAte,
+                    comboAte = it.comboAte,
                 )
             },
             tarefas = tarefas.await(),
@@ -361,6 +374,7 @@ class CasaRepository @Inject constructor(
             ocorrencias = ocorrencias.await(),
             castigos = castigos.await(),
             vales = vales.await(),
+            desafios = desafios.await(),
         )
     }
 
@@ -373,7 +387,7 @@ class CasaRepository @Inject constructor(
         val novo = c.channel("casa-$casaId")
         val mudancas = listOf(
             "tarefas", "registros", "temporadas", "membros", "cartas", "trocas", "conquistas",
-            "ocorrencia_tipos", "ocorrencias", "castigos", "vales",
+            "ocorrencia_tipos", "ocorrencias", "castigos", "vales", "desafios",
         ).map { tabela ->
             novo.postgresChangeFlow<PostgresAction>(schema = "public") {
                 table = tabela

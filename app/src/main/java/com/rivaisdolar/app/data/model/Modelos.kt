@@ -44,6 +44,20 @@ data class TipoOcorrenciaNova(
 )
 
 @Serializable
+data class Desafio(
+    val id: String,
+    @SerialName("casa_id") val casaId: String,
+    @SerialName("user_id") val userId: String,
+    @SerialName("tarefa_id") val tarefaId: String,
+    val prazo: String,
+    val sucesso: Int = 40,
+    val falha: Int = 20,
+    val status: String = "pendente",
+    @SerialName("criado_em") val criadoEm: String,
+    @SerialName("resolvido_em") val resolvidoEm: String? = null,
+)
+
+@Serializable
 data class Castigo(
     val id: String,
     @SerialName("casa_id") val casaId: String,
@@ -101,6 +115,8 @@ data class Membro(
     @SerialName("balde_agua_fria") val baldeAguaFria: Boolean = false,
     @SerialName("seguro_ate") val seguroAte: String? = null,
     @SerialName("nota_fiscal_ate") val notaFiscalAte: String? = null,
+    @SerialName("mao_atada_ate") val maoAtadaAte: String? = null,
+    @SerialName("combo_ate") val comboAte: String? = null,
 )
 
 @Serializable
@@ -124,6 +140,8 @@ data class Tarefa(
     @SerialName("escudo_ate") val escudoAte: String? = null,
     @SerialName("vetada_por") val vetadaPor: String? = null,
     @SerialName("vetada_ate") val vetadaAte: String? = null,
+    @SerialName("cena_ate") val cenaAte: String? = null,
+    @SerialName("cena_de") val cenaDe: String? = null,
 )
 
 @Serializable
@@ -149,6 +167,8 @@ data class Multiplicador(
     val tipo: String,
     val rotulo: String,
     val valor: Double,
+    /** Bônus/desconto fixo em pontos (Combo, Cena, Desafio), não um fator. */
+    val flat: Boolean = false,
 )
 
 @Serializable

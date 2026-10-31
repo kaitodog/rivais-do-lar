@@ -113,7 +113,12 @@ private fun Extrato(rotuloBase: String, base: Int, multiplicadores: List<Multipl
     Column {
         LinhaExtrato(rotuloBase, base.pt(), ultima = multiplicadores.isEmpty() && observacoes.isEmpty())
         multiplicadores.forEachIndexed { i, m ->
-            LinhaExtrato(m.rotulo, mult(m.valor), ultima = i == multiplicadores.lastIndex && observacoes.isEmpty())
+            val valor = if (m.flat) {
+                (if (m.valor >= 0) "+" else "") + m.valor.toInt().toString()
+            } else {
+                mult(m.valor)
+            }
+            LinhaExtrato(m.rotulo, valor, ultima = i == multiplicadores.lastIndex && observacoes.isEmpty())
         }
         observacoes.forEach { Texto(it, Tipo.subtitulo, Modifier.padding(vertical = 6.dp, horizontal = 2.dp)) }
     }
@@ -652,6 +657,44 @@ fun ColumnScope.FolhaUsarCarta(carta: Carta, s: CasaSnapshot, agora: Instant, vm
                 carregando = ocupado,
                 estilo = EstiloBotao.Ouro,
             )
+        }
+        TipoCarta.Pedagio -> {
+            Texto(
+                "Cobra 10 pontos do rival agora, sem tarefa. O Seguro bloqueia.",
+                Tipo.pequeno,
+                Modifier.fillMaxWidth(),
+                alinhamento = TextAlign.Center,
+            )
+            BotaoCapsula("Cobrar o pedágio", usar, carregando = ocupado, tinta = Cores.Alerta)
+        }
+        TipoCarta.MaoAtada -> {
+            Texto(
+                "O rival fica 12h sem usar cartas ofensivas. Defesa, vantagem e tarefas continuam.",
+                Tipo.pequeno,
+                Modifier.fillMaxWidth(),
+                alinhamento = TextAlign.Center,
+            )
+            BotaoCapsula("Amarrar as mãos", usar, carregando = ocupado, tinta = Cores.Alerta)
+        }
+        TipoCarta.RouboCena -> {
+            Escolha(
+                "Qual tarefa livre vira cena",
+                s.tarefas.filter { it.status == "livre" }.sortedByDescending { it.pontosVale() },
+                alvo,
+            ) { alvo = it }
+            BotaoCapsula("Marcar Roubo de Cena", usar, habilitado = alvo != null, carregando = ocupado)
+        }
+        TipoCarta.Combo -> BotaoCapsula("Ativar Combo da Casa", usar, carregando = ocupado)
+        TipoCarta.Dobrou -> {
+            Escolha(
+                "Sua tarefa de 40+ pontos",
+                s.tarefas.filter {
+                    it.status == "reservada" && it.reservadaPor == s.meuId &&
+                        Pontuacao.pontos(it.minutos, it.esforco, it.chatice) >= 40
+                }.sortedByDescending { it.pontosVale() },
+                alvo,
+            ) { alvo = it }
+            BotaoCapsula("Apostar: +40 ou −20", usar, habilitado = alvo != null, carregando = ocupado, tinta = Cores.Alerta)
         }
         TipoCarta.Arrastao -> Texto(
             "A decisiva é usada direto na aba Cartas.",
