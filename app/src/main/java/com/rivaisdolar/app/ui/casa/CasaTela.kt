@@ -21,6 +21,7 @@ import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -57,6 +58,7 @@ import com.rivaisdolar.app.ui.principal.pontosVale
 import com.rivaisdolar.app.ui.theme.Cores
 import com.rivaisdolar.app.ui.theme.Tipo
 import dev.chrisbanes.haze.hazeSource
+import java.text.Normalizer
 import dev.chrisbanes.haze.rememberHazeState
 
 private sealed interface Edicao {
@@ -77,6 +79,7 @@ fun CasaTela(
     aoUltimaTemporada: (String) -> Unit,
     aoHistorico: () -> Unit,
     aoProcurarAtualizacao: () -> Unit,
+    aoVistorias: () -> Unit,
 ) {
     val snapshot by vm.snapshot.collectAsStateWithLifecycle()
     val ocupado by vm.ocupado.collectAsStateWithLifecycle()
@@ -84,6 +87,7 @@ fun CasaTela(
     val s = snapshot ?: return
     val context = LocalContext.current
     var edicao by remember { mutableStateOf<Edicao?>(null) }
+    var buscaTarefas by rememberSaveable { mutableStateOf("") }
     val haze = rememberHazeState()
     val eu = s.eu
 
@@ -209,19 +213,59 @@ fun CasaTela(
                 }
             }
             item {
+                CampoTexto(buscaTarefas, { buscaTarefas = it }, "Buscar tarefa ou categoria")
+            }
+            item {
                 Grupo {
                     Linha("Criar tarefa", subtitulo = "Nome, categoria, ícone, tempo e chatice", inicio = { IconeTarefa("add") }, seta = true, aoTocar = { aoEditarTarefa(null) })
-                    s.tarefas.sortedBy { it.titulo }.forEach { t ->
-                        Divisoria()
-                        Linha(
-                            titulo = t.titulo,
-                            subtitulo = "${t.categoria} · ${t.minutos} min",
-                            inicio = { IconeTarefa(t.icone) },
-                            fim = { Texto(t.pontosVale().pt(), Tipo.numero) },
-                            seta = true,
-                            aoTocar = { aoEditarTarefa(t.id) },
-                        )
+                }
+            }
+            val tarefasCasa = s.tarefas
+                .filter {
+                    buscaTarefas.isBlank() ||
+                        it.titulo.semAcento().contains(buscaTarefas.semAcento()) ||
+                        it.categoria.semAcento().contains(buscaTarefas.semAcento())
+                }
+                .sortedBy { "${it.categoria} ${it.titulo}" }
+            if (tarefasCasa.isEmpty()) {
+                item { Texto("Nenhuma tarefa encontrada.", Tipo.subtitulo, Modifier.padding(horizontal = 16.dp)) }
+            }
+            tarefasCasa.groupBy { it.categoria }.toSortedMap().forEach { (categoria, lista) ->
+                item(key = "cat-$categoria") { Secao(categoria, Modifier.padding(top = 4.dp)) }
+                item(key = "grupo-$categoria") {
+                    Grupo {
+                        lista.forEachIndexed { i, t ->
+                            if (i > 0) Divisoria()
+                            Linha(
+                                titulo = t.titulo,
+                                subtitulo = "${t.categoria} · ${t.minutos} min",
+                                inicio = { IconeTarefa(t.icone) },
+                                fim = { Texto(t.pontosVale().pt(), Tipo.numero) },
+                                seta = true,
+                                aoTocar = { aoEditarTarefa(t.id) },
+                            )
+                        }
                     }
+                }
+            }
+
+            item { Secao("Vistorias", Modifier.padding(top = 4.dp)) }
+            item {
+                Grupo {
+                    Linha(
+                        titulo = "Vistorias",
+                        subtitulo = "Flagras com multa imediata",
+                        inicio = { IconeTarefa("flag", cor = if (s.casa.vistoriasAtivas) Cores.Alerta else Cores.TextoSecundario) },
+                        fim = { Interruptor(s.casa.vistoriasAtivas, vm::definirVistorias) },
+                    )
+                    Divisoria()
+                    Linha(
+                        titulo = "Tipos de vistoria",
+                        subtitulo = "${s.tiposVistoria.size} cadastrados · adicionar, editar ou remover",
+                        inicio = { IconeTarefa("checklist") },
+                        seta = true,
+                        aoTocar = aoVistorias,
+                    )
                 }
             }
 
@@ -290,7 +334,7 @@ fun CasaTela(
                         Texto(
                             "Isso zera o placar e a meta da Temporada ${s.temporada?.numero ?: ""}. " +
                                 "Conclusões aguardando validação são canceladas e as tarefas voltam para a fila. " +
-                                "Tarefas já validadas, moedas, XP, sequência e cartas continuam.",
+                                "O B.O. da temporada é limpo. Tarefas já validadas, moedas, XP, sequência e cartas continuam.",
                             Tipo.pequenoSecundario,
                             Modifier.fillMaxWidth(),
                             alinhamento = TextAlign.Center,
@@ -344,6 +388,9 @@ private fun androidx.compose.foundation.layout.ColumnScope.EditarTexto(
     Box(Modifier.width(1.dp))
     BotaoCapsula("Salvar", { aoSalvar(texto.trim()) }, habilitado = texto.isNotBlank(), carregando = ocupado)
 }
+
+private fun String.semAcento(): String =
+    Normalizer.normalize(this, Normalizer.Form.NFD).replace(Regex("\\p{M}+"), "").lowercase()
 
 private fun compartilharCodigo(context: Context, codigo: String) {
     context.getSystemService(ClipboardManager::class.java)?.setPrimaryClip(ClipData.newPlainText("Código", codigo))

@@ -44,6 +44,8 @@ import com.rivaisdolar.app.ui.tarefas.FolhaMeta
 import com.rivaisdolar.app.ui.tarefas.FolhaTroca
 import com.rivaisdolar.app.ui.tarefas.FolhaUsarCarta
 import com.rivaisdolar.app.ui.tarefas.FolhaValidar
+import com.rivaisdolar.app.ui.vistorias.FolhaBoletim
+import com.rivaisdolar.app.ui.vistorias.FolhaVistoria
 import com.rivaisdolar.app.push.Push
 import android.Manifest
 import android.os.Build
@@ -63,6 +65,8 @@ private sealed interface Folha {
     data object Atividade : Folha
     data object Meta : Folha
     data object Filtro : Folha
+    data object Vistoria : Folha
+    data object Boletim : Folha
     data class Troca(val trocaId: String) : Folha
     data class UsarCarta(val cartaId: String) : Folha
 }
@@ -139,6 +143,7 @@ fun PrincipalTela(
                     aoMeta = { folha = Folha.Meta },
                     aoTroca = { folha = Folha.Troca(it.id) },
                     aoCartas = { aba = Aba.Cartas },
+                    aoVistoria = { folha = Folha.Vistoria },
                 )
                 Aba.Tarefas -> TarefasTela(
                     s = s,
@@ -224,6 +229,8 @@ fun PrincipalTela(
                         else FolhaUsarCarta(c, s, agora, vm, ocupado, fechar)
                     }
                     Folha.Meta -> FolhaMeta(s, vm, ocupado, fechar)
+                    Folha.Vistoria -> FolhaVistoria(s, vm, ocupado, fechar, { folha = Folha.Boletim })
+                    Folha.Boletim -> FolhaBoletim(s, agora, { folha = Folha.Vistoria })
                     Folha.Filtro -> FolhaFiltro(s, categoria, {
                         categoria = it
                         folha = null

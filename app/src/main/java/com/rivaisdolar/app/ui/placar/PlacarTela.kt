@@ -93,6 +93,7 @@ fun PlacarTela(
     aoMeta: () -> Unit,
     aoTroca: (Troca) -> Unit = {},
     aoCartas: () -> Unit = {},
+    aoVistoria: () -> Unit = {},
 ) {
     val pendentes = s.pendentesParaMim
     val hoje = tarefasDeHoje(s, agora)
@@ -128,6 +129,9 @@ fun PlacarTela(
                     Modifier.toque(aoTocar = aoCartas).onGloballyPositioned { destino = it.boundsInRoot().center },
                 )
                 Spacer(Modifier.weight(1f))
+                if (s.casa.vistoriasAtivas && s.outro != null) {
+                    BotaoCirculo("flag", "Vistoria", aoVistoria)
+                }
                 val avisos = pendentes.isNotEmpty() || s.naoLidas > 0 || s.trocaParaMim != null
                 BotaoCirculo("notifications", "Atividade", aoNotificacoes, marcador = if (avisos) Cores.Alerta else null)
                 BotaoCirculo("person", "Casa e perfil", aoCasa)

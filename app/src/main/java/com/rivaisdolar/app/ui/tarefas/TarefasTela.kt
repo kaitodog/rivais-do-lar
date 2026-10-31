@@ -117,11 +117,28 @@ fun TarefasTela(
         }
         secoes.forEach { (titulo, tarefas) ->
             item(key = "s-$titulo") { Secao(titulo, Modifier.padding(top = 4.dp)) }
-            item(key = "g-$titulo") {
-                Grupo {
-                    tarefas.forEachIndexed { i, t ->
-                        if (i > 0) Divisoria()
-                        LinhaTarefa(t, s, agora, doPlacar = false, aoTocar = { aoAbrirTarefa(t) })
+            val porCategoria = tarefas.groupBy { it.categoria }.toSortedMap()
+            if (porCategoria.size <= 1) {
+                item(key = "g-$titulo") {
+                    Grupo {
+                        tarefas.forEachIndexed { i, t ->
+                            if (i > 0) Divisoria()
+                            LinhaTarefa(t, s, agora, doPlacar = false, aoTocar = { aoAbrirTarefa(t) })
+                        }
+                    }
+                }
+            } else {
+                porCategoria.forEach { (categoria, lista) ->
+                    item(key = "c-$titulo-$categoria") {
+                        Texto(categoria.uppercase(), Tipo.secao, Modifier.padding(start = 16.dp, top = 2.dp))
+                    }
+                    item(key = "g-$titulo-$categoria") {
+                        Grupo {
+                            lista.forEachIndexed { i, t ->
+                                if (i > 0) Divisoria()
+                                LinhaTarefa(t, s, agora, doPlacar = false, aoTocar = { aoAbrirTarefa(t) })
+                            }
+                        }
                     }
                 }
             }

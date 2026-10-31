@@ -11,6 +11,7 @@ import com.rivaisdolar.app.data.model.Carta
 import com.rivaisdolar.app.data.model.Casa
 import com.rivaisdolar.app.data.model.Conquista
 import com.rivaisdolar.app.data.model.Notificacao
+import com.rivaisdolar.app.data.model.Ocorrencia
 import com.rivaisdolar.app.data.model.Previa
 import com.rivaisdolar.app.data.model.Membro
 import com.rivaisdolar.app.data.model.Profile
@@ -19,6 +20,8 @@ import com.rivaisdolar.app.data.model.Tarefa
 import com.rivaisdolar.app.data.model.TarefaCadastro
 import com.rivaisdolar.app.data.model.TarefaNova
 import com.rivaisdolar.app.data.model.Temporada
+import com.rivaisdolar.app.data.model.TipoOcorrencia
+import com.rivaisdolar.app.data.model.TipoOcorrenciaNova
 import com.rivaisdolar.app.data.model.Troca
 import com.rivaisdolar.app.widget.WidgetPlacar
 import com.rivaisdolar.app.di.EscopoApp
@@ -89,6 +92,8 @@ data class CasaSnapshot(
     val trocas: List<Troca> = emptyList(),
     val conquistas: List<Conquista> = emptyList(),
     val notificacoes: List<Notificacao> = emptyList(),
+    val tiposVistoria: List<TipoOcorrencia> = emptyList(),
+    val ocorrencias: List<Ocorrencia> = emptyList(),
 ) {
     val eu: Jogador? get() = jogadores.firstOrNull { it.userId == meuId }
     val outro: Jogador? get() = jogadores.firstOrNull { it.userId != meuId }
@@ -280,6 +285,20 @@ class CasaRepository @Inject constructor(
                 limit(40)
             }.decodeList<Notificacao>()
         }
+        val tiposVistoria = async {
+            c.from("ocorrencia_tipos").select {
+                filter { eq("casa_id", casaId) }
+                order("categoria", Order.ASCENDING)
+                order("nome", Order.ASCENDING)
+            }.decodeList<TipoOcorrencia>()
+        }
+        val ocorrencias = async {
+            c.from("ocorrencias").select {
+                filter { eq("casa_id", casaId) }
+                order("criada_em", Order.DESCENDING)
+                limit(60)
+            }.decodeList<Ocorrencia>()
+        }
 
         val listaMembros = membros.await()
         val perfis = c.from("profiles").select { filter { isIn("id", listaMembros.map { it.userId }) } }
@@ -312,6 +331,8 @@ class CasaRepository @Inject constructor(
             trocas = trocas.await(),
             conquistas = conquistas.await(),
             notificacoes = notificacoes.await(),
+            tiposVistoria = tiposVistoria.await(),
+            ocorrencias = ocorrencias.await(),
         )
     }
 
@@ -322,7 +343,10 @@ class CasaRepository @Inject constructor(
         escutaRealtime?.cancel()
 
         val novo = c.channel("casa-$casaId")
-        val mudancas = listOf("tarefas", "registros", "temporadas", "membros", "cartas", "trocas", "conquistas").map { tabela ->
+        val mudancas = listOf(
+            "tarefas", "registros", "temporadas", "membros", "cartas", "trocas", "conquistas",
+            "ocorrencia_tipos", "ocorrencias",
+        ).map { tabela ->
             novo.postgresChangeFlow<PostgresAction>(schema = "public") {
                 table = tabela
                 filter("casa_id", FilterOperator.EQ, casaId)
@@ -561,14 +585,66 @@ class CasaRepository @Inject constructor(
         provider.exigir().from("profiles").update(buildJsonObject { put("nome", nome.trim()) }) { filter { eq("id", uid) } }
     }
 
-    suspend fun atualizarCasa(nome: String? = null, tregua: Boolean? = null) = escrever {
+    suspend fun atualizarCasa(
+        nome: String? = null,
+        tregua: Boolean? = null,
+        vistoriasAtivas: Boolean? = null,
+    ) = escrever {
         val casaId = (estado.value as? EstadoCasa.Pronta)?.snapshot?.casa?.id ?: return@escrever
         provider.exigir().from("casas").update(
             buildJsonObject {
                 nome?.let { put("nome", it.trim()) }
                 tregua?.let { put("modo_tregua", it) }
+                vistoriasAtivas?.let { put("vistorias_ativas", it) }
             },
         ) { filter { eq("id", casaId) } }
+    }
+
+    // Vistorias -------------------------------------------------------------------------------
+
+    /** Sobe a foto (prova do flagra) e aplica a multa na hora, no servidor. */
+    suspend fun registrarOcorrencia(tipo: TipoOcorrencia, foto: ByteArray): Resultado {
+        val uid = usuario ?: return Resultado.Erro("Faça login de novo.")
+        val caminho = "${tipo.casaId}/$uid/vistoria-${UUID.randomUUID()}.jpg"
+        try {
+            provider.exigir().storage.from("fotos").upload(caminho, foto) { contentType = ContentType.Image.JPEG }
+        } catch (e: CancellationException) {
+            throw e
+        } catch (e: Throwable) {
+            return Resultado.Erro(
+                if (e.semConexao()) "Sem conexão para enviar a foto do flagra." else e.mensagem(),
+            )
+        }
+        return rpc(
+            "registrar_ocorrencia",
+            buildJsonObject {
+                put("p_tipo", tipo.id)
+                put("p_foto_path", caminho)
+            },
+            "Registrar vistoria",
+        )
+    }
+
+    suspend fun criarTipoOcorrencia(nome: String, categoria: String, pontos: Int, icone: String) = escrever {
+        val casaId = (estado.value as? EstadoCasa.Pronta)?.snapshot?.casa?.id ?: error("Casa não carregada.")
+        provider.exigir().from("ocorrencia_tipos").insert(
+            TipoOcorrenciaNova(casaId, nome.trim(), categoria, pontos, icone),
+        )
+    }
+
+    suspend fun editarTipoOcorrencia(tipo: TipoOcorrencia, nome: String, categoria: String, pontos: Int, icone: String) = escrever {
+        provider.exigir().from("ocorrencia_tipos").update(
+            buildJsonObject {
+                put("nome", nome.trim())
+                put("categoria", categoria)
+                put("pontos", pontos)
+                put("icone", icone)
+            },
+        ) { filter { eq("id", tipo.id) } }
+    }
+
+    suspend fun removerTipoOcorrencia(tipo: TipoOcorrencia) = escrever {
+        provider.exigir().from("ocorrencia_tipos").delete { filter { eq("id", tipo.id) } }
     }
 
     suspend fun atualizarProvocacao(nivel: String) = escrever {

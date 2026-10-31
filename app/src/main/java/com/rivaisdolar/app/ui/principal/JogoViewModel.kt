@@ -12,6 +12,7 @@ import com.rivaisdolar.app.push.Push
 import com.rivaisdolar.app.data.model.Tarefa
 import com.rivaisdolar.app.data.model.TarefaCadastro
 import com.rivaisdolar.app.data.model.Temporada
+import com.rivaisdolar.app.data.model.TipoOcorrencia
 import com.rivaisdolar.app.data.remote.AuthRepository
 import com.rivaisdolar.app.data.remote.CasaRepository
 import com.rivaisdolar.app.data.remote.CasaSnapshot
@@ -164,6 +165,31 @@ class JogoViewModel @Inject constructor(
     fun atualizarNomeCasa(nome: String, ok: () -> Unit = {}) = executar("Casa renomeada.", ok) { repo.atualizarCasa(nome = nome) }
     fun definirTregua(ligada: Boolean) =
         executar(if (ligada) "Modo trégua ligado." else "Modo trégua desligado.") { repo.atualizarCasa(tregua = ligada) }
+
+    fun definirVistorias(ligadas: Boolean) =
+        executar(if (ligadas) "Vistorias ligadas." else "Vistorias desligadas.") {
+            repo.atualizarCasa(vistoriasAtivas = ligadas)
+        }
+
+    fun registrarVistoria(tipo: TipoOcorrencia, foto: ByteArray, ok: () -> Unit = {}) =
+        executar("Flagra registrado. ${tipo.pontos} pontos a menos para $outroNome.", ok) {
+            repo.registrarOcorrencia(tipo, foto)
+        }
+
+    fun criarTipoVistoria(nome: String, categoria: String, pontos: Int, icone: String, ok: () -> Unit = {}) =
+        executar("Vistoria criada.", ok) { repo.criarTipoOcorrencia(nome, categoria, pontos, icone) }
+
+    fun editarTipoVistoria(
+        tipo: TipoOcorrencia,
+        nome: String,
+        categoria: String,
+        pontos: Int,
+        icone: String,
+        ok: () -> Unit = {},
+    ) = executar("Vistoria atualizada.", ok) { repo.editarTipoOcorrencia(tipo, nome, categoria, pontos, icone) }
+
+    fun removerTipoVistoria(tipo: TipoOcorrencia, ok: () -> Unit = {}) =
+        executar("Vistoria removida.", ok) { repo.removerTipoOcorrencia(tipo) }
 
     fun definirProvocacao(nivel: String) = executar(null) { repo.atualizarProvocacao(nivel) }
     fun definirCor(cor: String) = executar("Cor trocada.") { repo.definirCor(cor) }

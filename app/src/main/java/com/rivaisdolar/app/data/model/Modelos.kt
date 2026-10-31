@@ -19,6 +19,44 @@ data class Casa(
     @SerialName("codigo_convite") val codigoConvite: String,
     val fuso: String = "America/Sao_Paulo",
     @SerialName("modo_tregua") val modoTregua: Boolean = false,
+    @SerialName("vistorias_ativas") val vistoriasAtivas: Boolean = true,
+)
+
+/** Catálogo editável de flagras da casa. */
+@Serializable
+data class TipoOcorrencia(
+    val id: String,
+    @SerialName("casa_id") val casaId: String,
+    val nome: String,
+    val categoria: String,
+    val pontos: Int,
+    val icone: String,
+    val ativo: Boolean = true,
+)
+
+@Serializable
+data class TipoOcorrenciaNova(
+    @SerialName("casa_id") val casaId: String,
+    val nome: String,
+    val categoria: String,
+    val pontos: Int,
+    val icone: String,
+)
+
+/** Um flagra já aplicado: o alvo perdeu os pontos na hora. */
+@Serializable
+data class Ocorrencia(
+    val id: String,
+    @SerialName("casa_id") val casaId: String,
+    val autor: String,
+    val alvo: String,
+    @SerialName("tipo_id") val tipoId: String? = null,
+    @SerialName("tipo_nome") val tipoNome: String,
+    @SerialName("tipo_categoria") val tipoCategoria: String,
+    val pontos: Int,
+    @SerialName("foto_path") val fotoPath: String? = null,
+    @SerialName("temporada_id") val temporadaId: String? = null,
+    @SerialName("criada_em") val criadaEm: String,
 )
 
 @Serializable

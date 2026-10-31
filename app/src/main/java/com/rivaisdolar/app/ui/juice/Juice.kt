@@ -16,6 +16,7 @@ enum class EventoJuice {
     Vitoria,
     Derrota,
     Sequencia,
+    Vistoria,
 }
 
 /**
@@ -34,6 +35,7 @@ class JuiceState(
             EventoJuice.Virada, EventoJuice.Validado, EventoJuice.Carta -> haptico.tocar(Toque.Sucesso)
             EventoJuice.Compra -> haptico.tocar(Toque.Clique)
             EventoJuice.Sequencia -> haptico.tocar(Toque.Tick)
+            EventoJuice.Vistoria -> haptico.tocar(Toque.Sucesso)
             EventoJuice.Meta -> haptico.tocar(Toque.Sucesso)
             EventoJuice.Vitoria -> haptico.vitoria()
             EventoJuice.Derrota -> Unit
@@ -95,6 +97,12 @@ class JuiceState(
             EventoJuice.Derrota -> Emissores.cinza(sistema, 16)
 
             EventoJuice.Sequencia -> Emissores.brasa(sistema, ponto(0.11f, 0.32f), 7)
+
+            EventoJuice.Vistoria -> {
+                val centro = origem ?: ponto(0.5f, 0.46f)
+                Emissores.fagulha(sistema, centro, Cores.Alerta, 18, 1f)
+                Emissores.anel(sistema, centro, Cores.Alerta)
+            }
         }
     }
 }
