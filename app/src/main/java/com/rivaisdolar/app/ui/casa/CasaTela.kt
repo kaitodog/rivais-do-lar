@@ -260,8 +260,8 @@ fun CasaTela(
                     )
                     Divisoria()
                     Linha(
-                        titulo = "Código da Casa",
-                        subtitulo = "${s.tiposVistoria.size} vistorias · regras e valores editáveis",
+                        titulo = "Vistorias",
+                        subtitulo = "Adicionar, editar ou remover os flagras · ${s.tiposVistoria.size} cadastrados",
                         inicio = { IconeTarefa("checklist") },
                         seta = true,
                         aoTocar = aoVistorias,

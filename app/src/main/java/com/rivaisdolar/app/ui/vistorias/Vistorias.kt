@@ -130,9 +130,9 @@ fun VistoriasTela(vm: JogoViewModel, aoVoltar: () -> Unit) {
             }
             item {
                 Column {
-                    Texto("Código da Casa", Tipo.tituloGrande)
+                    Texto("Vistorias", Tipo.tituloGrande)
                     Texto(
-                        "As regras e os valores das vistorias. Flagra vale na hora: o alvo perde os pontos e não tem conserto.",
+                        "Nova vistoria para adicionar; toque numa existente para editar ou remover. Flagra vale na hora: o alvo perde os pontos e não tem conserto.",
                         Tipo.pequenoSecundario,
                         Modifier.padding(top = 3.dp),
                     )
