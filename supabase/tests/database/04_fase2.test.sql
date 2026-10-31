@@ -134,7 +134,7 @@ set local role authenticated;
 set local request.jwt.claims = '{"sub": "22222222-2222-2222-2222-222222222222"}';
 select public.validar_registro((select id from r5));
 select throws_ok(
-  $$select public.comprar_carta('escudo')$$, 'P0001', 'Faltam 20 moedas para essa carta.', 'loja confere o saldo (moedas do roubo vieram em dobro)');
+  $$select public.comprar_carta('hora_feliz')$$, 'P0001', 'Faltam 15 moedas para essa carta.', 'loja confere o saldo (moedas do roubo vieram em dobro)');
 reset role;
 select is((select placar from public.temporadas where casa_id = (select id from ctx) and not encerrada), (select placar from antes),
   'trégua: placar não mexe');
