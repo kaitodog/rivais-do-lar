@@ -41,6 +41,8 @@ interface AcoesJogo {
     fun usarCarta(carta: Carta, alvo: String? = null, alvo2: String? = null, ok: () -> Unit = {})
     fun usarCastigo(descricao: String, ok: () -> Unit = {}) = Unit
     fun usarVale(descricao: String, ok: () -> Unit = {}) = Unit
+    fun usarReviravolta(ok: () -> Unit = {}) = Unit
+    fun usarAllin(ok: () -> Unit = {}) = Unit
     fun responderTroca(troca: Troca, aceitar: Boolean, ok: () -> Unit = {})
     fun recusasNaSemana(): Int
     fun marcarLidas()
@@ -144,6 +146,12 @@ class JogoViewModel @Inject constructor(
 
     override fun usarVale(descricao: String, ok: () -> Unit) =
         executar("Vale-favor enviado.", ok) { repo.usarVale(descricao) }
+
+    override fun usarReviravolta(ok: () -> Unit) =
+        executar("Reviravolta armada. O próximo roubo de ponto volta.", ok) { repo.usarReviravolta() }
+
+    override fun usarAllin(ok: () -> Unit) =
+        executar("All-in ativado: 3 tarefas de 20+ em 24h.", ok) { repo.usarAllin() }
 
     fun cumprirVale(id: String) =
         executar("Vale cumprido. A honra agradece.", { }) { repo.cumprirVale(id) }

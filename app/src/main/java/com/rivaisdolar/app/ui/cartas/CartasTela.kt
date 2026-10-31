@@ -333,6 +333,12 @@ fun CartasTela(
             j.comboAte?.instanteOuNull()?.takeIf { it.isAfter(agora) }?.let { ate ->
                 add("category" to ((if (meu) "Seu Combo" else "Combo de ${j.nome}") + " até " + ate.atZone(zona).format(formatoHora)))
             }
+            j.reviravoltaAte?.instanteOuNull()?.takeIf { it.isAfter(agora) }?.let { ate ->
+                add("autorenew" to ((if (meu) "Sua Reviravolta" else "Reviravolta de ${j.nome}") + " até " + ate.atZone(zona).format(formatoHora)))
+            }
+            j.allinAte?.instanteOuNull()?.takeIf { it.isAfter(agora) }?.let { ate ->
+                add("all_inclusive" to ((if (meu) "Seu All-in ${j.allinCount}/3" else "All-in de ${j.nome} ${j.allinCount}/3") + " até " + ate.atZone(zona).format(formatoHora)))
+            }
         }
     }
 

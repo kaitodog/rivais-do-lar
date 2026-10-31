@@ -85,6 +85,9 @@ data class Jogador(
     val notaFiscalAte: String? = null,
     val maoAtadaAte: String? = null,
     val comboAte: String? = null,
+    val reviravoltaAte: String? = null,
+    val allinAte: String? = null,
+    val allinCount: Int = 0,
 )
 
 @Serializable
@@ -359,6 +362,9 @@ class CasaRepository @Inject constructor(
                     notaFiscalAte = it.notaFiscalAte,
                     maoAtadaAte = it.maoAtadaAte,
                     comboAte = it.comboAte,
+                    reviravoltaAte = it.reviravoltaAte,
+                    allinAte = it.allinAte,
+                    allinCount = it.allinCount,
                 )
             },
             tarefas = tarefas.await(),
@@ -554,6 +560,12 @@ class CasaRepository @Inject constructor(
     /** Nota Fiscal recebida na Cobrança de Aluguel: cobra 15 de volta. */
     suspend fun usarNotaFiscal() =
         rpc("usar_nota_fiscal", buildJsonObject { }, "Usar Nota Fiscal")
+
+    suspend fun usarReviravolta() =
+        rpc("usar_reviravolta", buildJsonObject { }, "Armar Reviravolta")
+
+    suspend fun usarAllin() =
+        rpc("usar_allin", buildJsonObject { }, "Iniciar All-in")
 
     suspend fun usarCastigo(descricao: String) =
         rpc("usar_castigo", buildJsonObject { put("p_descricao", descricao) }, "Enviar castigo")

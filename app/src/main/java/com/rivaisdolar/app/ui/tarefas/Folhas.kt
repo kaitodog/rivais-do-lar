@@ -696,6 +696,35 @@ fun ColumnScope.FolhaUsarCarta(carta: Carta, s: CasaSnapshot, agora: Instant, vm
             ) { alvo = it }
             BotaoCapsula("Apostar: +40 ou −20", usar, habilitado = alvo != null, carregando = ocupado, tinta = Cores.Alerta)
         }
+        TipoCarta.Reviravolta -> {
+            Texto(
+                "Bloqueia o próximo roubo de ponto (Cobrança, Pedágio ou Arrastão) e devolve metade, máximo 15.",
+                Tipo.pequeno,
+                Modifier.fillMaxWidth(),
+                alinhamento = TextAlign.Center,
+            )
+            BotaoCapsula(
+                if (s.eu?.reviravoltaAte?.instanteOuNull()?.isAfter(agora) == true) "Reviravolta já armada" else "Armar Reviravolta",
+                { vm.usarReviravolta { aoFechar() } },
+                habilitado = s.eu?.reviravoltaAte?.instanteOuNull()?.isAfter(agora) != true,
+                carregando = ocupado,
+                estilo = EstiloBotao.Ouro,
+            )
+        }
+        TipoCarta.Allin -> {
+            Texto(
+                "3 tarefas de 20+ pontos em 24h: +60 se completar, −30 se falhar.",
+                Tipo.pequeno,
+                Modifier.fillMaxWidth(),
+                alinhamento = TextAlign.Center,
+            )
+            BotaoCapsula(
+                "Ativar All-in",
+                { vm.usarAllin { aoFechar() } },
+                carregando = ocupado,
+                estilo = EstiloBotao.Ouro,
+            )
+        }
         TipoCarta.Arrastao -> Texto(
             "A decisiva é usada direto na aba Cartas.",
             Tipo.pequenoSecundario,

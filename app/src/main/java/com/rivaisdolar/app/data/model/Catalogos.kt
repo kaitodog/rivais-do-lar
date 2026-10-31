@@ -26,6 +26,8 @@ enum class TipoCarta(
     RouboCena("roubo_cena", "Roubo de Cena", "Rara", 20, "theater_comedy", "Marca uma tarefa livre: quem concluir em 24h leva +30."),
     Combo("combo", "Combo da Casa", "Comum", 20, "category", "+30 ao completar 3 categorias distintas em 24h."),
     Dobrou("dobrou", "Dobrou ou Danou", "Rara", 25, "casino", "Tarefa sua de 40+ pontos: +40 se concluir em 12h, −20 se falhar."),
+    Reviravolta("reviravolta", "Reviravolta", "Rara", 20, "autorenew", "Bloqueia o próximo roubo de ponto e devolve metade, máximo 15."),
+    Allin("allin", "All-in da Faxina", "Épica", 30, "all_inclusive", "3 tarefas de 20+ em 24h: +60 se completar, −30 se falhar."),
     Arrastao("arrastao", "Arrastão do Sofá", "Decisiva", 0, "weekend", "Rouba até 30 pontos. Uma vez por temporada.");
 
     val epica: Boolean get() = raridade == "Épica"

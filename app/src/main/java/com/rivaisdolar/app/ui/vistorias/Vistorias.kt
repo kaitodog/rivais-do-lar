@@ -130,12 +130,23 @@ fun VistoriasTela(vm: JogoViewModel, aoVoltar: () -> Unit) {
             }
             item {
                 Column {
-                    Texto("Vistorias", Tipo.tituloGrande)
+                    Texto("Código da Casa", Tipo.tituloGrande)
                     Texto(
-                        "Flagra vale na hora: o alvo perde os pontos e não tem conserto. A foto é a prova.",
+                        "As regras e os valores das vistorias. Flagra vale na hora: o alvo perde os pontos e não tem conserto.",
                         Tipo.pequenoSecundario,
                         Modifier.padding(top = 3.dp),
                     )
+                }
+            }
+            item {
+                CartaoSolido {
+                    Column(Modifier.padding(14.dp), verticalArrangement = Arrangement.spacedBy(4.dp)) {
+                        Texto("Regras das vistorias", Tipo.tituloCartao)
+                        Texto(
+                            "2 vistorias por dia · 1 por tipo/dia · 50 pontos de perda por dia · 120 por temporada. A foto é obrigatória.",
+                            Tipo.subtitulo,
+                        )
+                    }
                 }
             }
             item {

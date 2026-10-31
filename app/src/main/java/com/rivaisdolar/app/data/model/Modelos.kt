@@ -117,6 +117,9 @@ data class Membro(
     @SerialName("nota_fiscal_ate") val notaFiscalAte: String? = null,
     @SerialName("mao_atada_ate") val maoAtadaAte: String? = null,
     @SerialName("combo_ate") val comboAte: String? = null,
+    @SerialName("reviravolta_ate") val reviravoltaAte: String? = null,
+    @SerialName("allin_ate") val allinAte: String? = null,
+    @SerialName("allin_count") val allinCount: Int = 0,
 )
 
 @Serializable

@@ -360,6 +360,12 @@ private fun Efeitos(s: CasaSnapshot, agora: Instant) {
             j.comboAte?.instanteOuNull()?.takeIf { it.isAfter(agora) }?.let {
                 add(Triple("category", (if (meu) "Seu Combo" else "Combo de ${j.nome}") + " até " + it.atZone(zona).format(formato), true))
             }
+            j.reviravoltaAte?.instanteOuNull()?.takeIf { it.isAfter(agora) }?.let {
+                add(Triple("autorenew", (if (meu) "Sua Reviravolta" else "Reviravolta de ${j.nome}") + " até " + it.atZone(zona).format(formato), true))
+            }
+            j.allinAte?.instanteOuNull()?.takeIf { it.isAfter(agora) }?.let {
+                add(Triple("all_inclusive", (if (meu) "Seu All-in ${j.allinCount}/3" else "All-in de ${j.nome} ${j.allinCount}/3") + " até " + it.atZone(zona).format(formato), true))
+            }
         }
     }
     if (chips.isEmpty()) return
