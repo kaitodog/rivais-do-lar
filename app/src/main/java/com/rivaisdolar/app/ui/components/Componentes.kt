@@ -6,6 +6,8 @@ import androidx.compose.animation.core.infiniteRepeatable
 import androidx.compose.animation.core.rememberInfiniteTransition
 import androidx.compose.animation.core.tween
 import androidx.compose.animation.core.animateFloat
+import androidx.compose.animation.core.snap
+import androidx.compose.animation.core.spring
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
@@ -56,6 +58,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.rivaisdolar.app.ui.theme.Cores
 import com.rivaisdolar.app.ui.theme.LocalDestaque
+import com.rivaisdolar.app.ui.theme.LocalReduzirMovimento
 import com.rivaisdolar.app.ui.theme.Simbolos
 import com.rivaisdolar.app.ui.theme.Tipo
 
@@ -104,7 +107,11 @@ fun Simbolo(
 fun Modifier.toque(habilitado: Boolean = true, papel: Role = Role.Button, aoTocar: () -> Unit): Modifier = composed {
     val interacao = remember { MutableInteractionSource() }
     val pressionado by interacao.collectIsPressedAsState()
-    val escala by animateFloatAsState(if (pressionado) 0.95f else 1f, label = "toque")
+    val escala by animateFloatAsState(
+        targetValue = if (pressionado) 0.97f else 1f,
+        animationSpec = spring(dampingRatio = 0.55f, stiffness = 700f),
+        label = "toque",
+    )
     this
         .graphicsLayer {
             scaleX = escala
@@ -239,15 +246,38 @@ fun BarraProgresso(fracao: Float, modifier: Modifier = Modifier, cor: Color = Co
     }
 }
 
-/** Barra do placar: cada jogador ocupa a fração proporcional aos seus pontos. */
+/** Barra do placar: cada jogador ocupa a fração proporcional aos seus pontos, com mola e luz na ponta. */
 @Composable
 fun BarraDividida(a: Int, b: Int, corA: Color, corB: Color, modifier: Modifier = Modifier) {
+    val reduzir = LocalReduzirMovimento.current
     val total = (a + b).coerceAtLeast(1)
     val fracA = if (a + b == 0) 0.5f else (a.toFloat() / total).coerceIn(0.04f, 0.96f)
-    val animada by animateFloatAsState(fracA, tween(900), label = "placar")
-    Row(modifier.fillMaxWidth().height(6.dp), horizontalArrangement = Arrangement.spacedBy(2.dp)) {
-        Box(Modifier.weight(animada).fillMaxHeight().clip(RoundedCornerShape(3.dp)).background(corA))
-        Box(Modifier.weight(1f - animada).fillMaxHeight().clip(RoundedCornerShape(3.dp)).background(corB))
+    val animada by animateFloatAsState(
+        targetValue = fracA,
+        animationSpec = if (reduzir) snap() else spring(dampingRatio = 0.72f, stiffness = 180f),
+        label = "placar",
+    )
+    Canvas(modifier.fillMaxWidth().height(6.dp)) {
+        val vao = 2.dp.toPx()
+        val raio = androidx.compose.ui.geometry.CornerRadius(size.height / 2f)
+        val larguraA = (size.width - vao) * animada
+        drawRoundRect(
+            color = corA,
+            size = Size(larguraA, size.height),
+            cornerRadius = raio,
+        )
+        drawRoundRect(
+            color = corB,
+            topLeft = Offset(larguraA + vao, 0f),
+            size = Size(size.width - larguraA - vao, size.height),
+            cornerRadius = raio,
+        )
+        // Ponto de luz na ponta do líder: a barra parece "puxar" o placar.
+        drawCircle(
+            color = Color.White.copy(alpha = 0.85f),
+            radius = 1.4.dp.toPx(),
+            center = Offset(larguraA, size.height / 2f),
+        )
     }
 }
 

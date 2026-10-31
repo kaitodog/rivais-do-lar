@@ -1,12 +1,15 @@
 package com.rivaisdolar.app.ui.placar
 
 import android.content.Intent
+import androidx.compose.animation.core.Animatable
 import androidx.compose.animation.core.animateIntAsState
 import androidx.compose.animation.core.snap
+import androidx.compose.animation.core.spring
 import androidx.compose.animation.core.tween
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.key
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -33,6 +36,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -63,6 +67,8 @@ import com.rivaisdolar.app.ui.components.Texto
 import com.rivaisdolar.app.ui.components.TituloGrande
 import com.rivaisdolar.app.ui.components.Vazio
 import com.rivaisdolar.app.ui.components.toque
+import com.rivaisdolar.app.ui.juice.EventoJuice
+import com.rivaisdolar.app.ui.juice.LocalJuice
 import com.rivaisdolar.app.ui.principal.bomba
 import com.rivaisdolar.app.ui.principal.legenda
 import com.rivaisdolar.app.ui.principal.pontosVale
@@ -90,6 +96,15 @@ fun PlacarTela(
 ) {
     val pendentes = s.pendentesParaMim
     val hoje = tarefasDeHoje(s, agora)
+    val juice = LocalJuice.current
+    val meusPontos = s.pontos(s.meuId)
+    var pontosAntes by remember { mutableStateOf<Int?>(null) }
+    // Realtime: quando o rival valida algo meu, a faísca sai junto com o número subindo.
+    LaunchedEffect(meusPontos) {
+        val antes = pontosAntes
+        pontosAntes = meusPontos
+        if (antes != null && meusPontos > antes) juice.disparar(EventoJuice.Pontos)
+    }
     val (moedasExibidas, voos) = rememberChegadaDeMoedas(s.eu?.moedas ?: 0)
     var destino by remember { mutableStateOf(Offset.Zero) }
     var raiz by remember { mutableStateOf(Offset.Zero) }
@@ -252,12 +267,15 @@ private fun CartaoPlacar(s: CasaSnapshot) {
                         Texto("Nível ${eu.nivel} · ${eu.moedas.pt()} moedas", Tipo.subtitulo)
                     }
                 }
-                val diferenca = kotlin.math.abs(pa - pb)
+                val meus = s.pontos(s.meuId)
+                val rival = s.outro?.let { s.pontos(it.userId) } ?: 0
+                val diferenca = meus - rival
                 Texto(
                     when {
-                        b == null -> "Esperando rival"
+                        s.outro == null -> "Esperando rival"
                         diferenca == 0 -> "Empatados"
-                        else -> "+${diferenca.pt()} pts"
+                        diferenca > 0 -> "+${diferenca.pt()} pts"
+                        else -> "Faltam ${(-diferenca).pt()} pra virar"
                     },
                     Tipo.numeroPequeno,
                 )
@@ -269,8 +287,15 @@ private fun CartaoPlacar(s: CasaSnapshot) {
 @Composable
 private fun LadoPlacar(j: Jogador?, pontos: Int, naFrente: Boolean, modifier: Modifier, direita: Boolean) {
     val reduzir = LocalReduzirMovimento.current
-    // Pontos sobem rolando quando um registro é validado.
+    // Pontos sobem rolando quando um registro é validado, com um "pop" curto no número.
     val animado by animateIntAsState(pontos, if (reduzir) snap() else tween(1100), label = "pontos")
+    val pulso = remember { Animatable(1f) }
+    LaunchedEffect(pontos) {
+        if (!reduzir) {
+            pulso.snapTo(1.08f)
+            pulso.animateTo(1f, spring(dampingRatio = 0.6f, stiffness = 480f))
+        }
+    }
     val cor = if (j == null) Cores.SuperficieAlta else Cores.jogador(j.cor)
     Column(modifier, horizontalAlignment = if (direita) Alignment.End else Alignment.Start, verticalArrangement = Arrangement.spacedBy(6.dp)) {
         Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(7.dp)) {
@@ -282,7 +307,15 @@ private fun LadoPlacar(j: Jogador?, pontos: Int, naFrente: Boolean, modifier: Mo
                 Texto(j?.nome ?: "Convidado", Tipo.rotulo, linhas = 1)
             }
         }
-        Texto(animado.pt(), Tipo.placar, cor = if (j == null) Cores.TextoTerciario else Cores.Texto)
+        Texto(
+            animado.pt(),
+            Tipo.placar,
+            Modifier.graphicsLayer {
+                scaleX = pulso.value
+                scaleY = pulso.value
+            },
+            cor = if (j == null) Cores.TextoTerciario else Cores.Texto,
+        )
         Box(Modifier.height(18.dp)) {
             if (naFrente && j != null) Selo("Na frente", Cores.jogador(j.cor))
         }
@@ -326,6 +359,13 @@ private fun CartaoMeta(s: CasaSnapshot, aoTocar: () -> Unit) {
     val t = s.temporada
     val atual = t?.metaAtual ?: 0
     val alvo = t?.metaAlvo ?: 2000
+    val juice = LocalJuice.current
+    val batida = atual >= alvo
+    var jaEstava by remember { mutableStateOf(batida) }
+    LaunchedEffect(batida) {
+        if (batida && !jaEstava) juice.disparar(EventoJuice.Meta)
+        jaEstava = batida
+    }
     CartaoSolido(Modifier.toque(aoTocar = aoTocar)) {
         Column(Modifier.padding(horizontal = 16.dp, vertical = 13.dp), verticalArrangement = Arrangement.spacedBy(9.dp)) {
             Row(verticalAlignment = Alignment.Bottom) {

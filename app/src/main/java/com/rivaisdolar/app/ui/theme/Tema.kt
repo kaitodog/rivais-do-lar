@@ -17,6 +17,11 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.em
 import androidx.compose.ui.unit.sp
 import com.rivaisdolar.app.R
+import com.rivaisdolar.app.ui.juice.HapticoAndroid
+import com.rivaisdolar.app.ui.juice.InclinacaoProvider
+import com.rivaisdolar.app.ui.juice.JuiceState
+import com.rivaisdolar.app.ui.juice.LocalJuice
+import com.rivaisdolar.app.ui.juice.SistemaParticulas
 
 /** Tema preto único (seção 4 do plano). Não usamos Material: todos os componentes são próprios. */
 object Cores {
@@ -98,10 +103,15 @@ fun RivaisTema(destaque: Color = Cores.Azul, conteudo: @Composable () -> Unit) {
     val context = LocalContext.current
     val vidro = remember { vidroDisponivel(context) }
     val reduzir = remember { movimentoReduzido(context) }
+    val haptico = remember { HapticoAndroid(context) }
+    val juice = remember { JuiceState(SistemaParticulas(), haptico) }
+    juice.reduzido = reduzir
     CompositionLocalProvider(
         LocalDestaque provides destaque,
         LocalVidroReal provides vidro,
         LocalReduzirMovimento provides reduzir,
-        content = conteudo,
-    )
+        LocalJuice provides juice,
+    ) {
+        InclinacaoProvider(ativo = vidro && !reduzir) { conteudo() }
+    }
 }

@@ -460,6 +460,10 @@ class CasaRepository @Inject constructor(
     suspend fun definirAposta(texto: String) =
         rpc("definir_aposta", buildJsonObject { put("p_aposta", texto) }, "Definir aposta", enfileiravel = true)
 
+    /** Destrutivo: zera o placar/meta da temporada atual. Nunca entra na fila offline. */
+    suspend fun reiniciarTemporada() =
+        rpc("reiniciar_temporada", buildJsonObject { }, "Resetar temporada")
+
     suspend fun definirMeta(alvo: Int, premio: String) =
         rpc(
             "definir_meta",

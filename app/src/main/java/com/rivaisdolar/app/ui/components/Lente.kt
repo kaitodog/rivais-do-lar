@@ -1,10 +1,12 @@
 package com.rivaisdolar.app.ui.components
 
-import android.graphics.RenderEffect
 import android.graphics.RuntimeShader
 import android.os.Build
 import androidx.annotation.RequiresApi
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.RenderEffect
 import androidx.compose.ui.graphics.asComposeRenderEffect
 import androidx.compose.ui.graphics.graphicsLayer
 
@@ -33,14 +35,46 @@ half4 main(float2 p) {
 }
 """
 
-fun Modifier.lenteDeVidro(raioPx: (larguraPx: Float, alturaPx: Float) -> Float, bordaPx: Float): Modifier {
+private class CacheLente {
+    private var shader: RuntimeShader? = null
+    private var efeito: RenderEffect? = null
+    private var largura = -1f
+    private var altura = -1f
+    private var raio = -1f
+
+    fun efeito(largura: Float, altura: Float, raio: Float, borda: Float): RenderEffect {
+        val atual = shader
+        if (atual == null || this.largura != largura || this.altura != altura || this.raio != raio) {
+            val novo = RuntimeShader(LENTE).apply {
+                setFloatUniform("tamanho", largura, altura)
+                setFloatUniform("raio", raio)
+            }
+            shader = novo
+            this.largura = largura
+            this.altura = altura
+            this.raio = raio
+            efeito = android.graphics.RenderEffect.createRuntimeShaderEffect(novo, "conteudo").asComposeRenderEffect()
+        }
+        // O pulso muda só o uniform: o shader e o RenderEffect são reaproveitados.
+        shader?.setFloatUniform("borda", borda)
+        return efeito!!
+    }
+}
+
+/**
+ * Aplica a lente. [bordaPx] é lida a cada quadro para o pulso de refração animar sem recompor.
+ * O shader é cacheado por tamanho/raio; antes ele era recriado a cada frame.
+ */
+@Composable
+fun Modifier.lenteDeVidro(
+    raioPx: (larguraPx: Float, alturaPx: Float) -> Float,
+    bordaPx: () -> Float,
+): Modifier {
     if (Build.VERSION.SDK_INT < Build.VERSION_CODES.TIRAMISU) return this
+    val cache = remember { CacheLente() }
     return this.graphicsLayer {
-        val shader = RuntimeShader(LENTE)
-        shader.setFloatUniform("tamanho", size.width, size.height)
-        shader.setFloatUniform("raio", raioPx(size.width, size.height))
-        shader.setFloatUniform("borda", bordaPx)
-        renderEffect = RenderEffect.createRuntimeShaderEffect(shader, "conteudo").asComposeRenderEffect()
+        val raio = raioPx(size.width, size.height)
+        renderEffect = cache.efeito(size.width, size.height, raio, bordaPx())
         clip = true
     }
 }

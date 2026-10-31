@@ -150,6 +150,9 @@ class JogoViewModel @Inject constructor(
         executar("Contestado. A tarefa voltou pra fila.", ok) { repo.contestar(r, comentario) }
 
     fun definirAposta(texto: String, ok: () -> Unit = {}) = executar("Aposta definida.", ok) { repo.definirAposta(texto) }
+    fun reiniciarTemporada(ok: () -> Unit = {}) =
+        executar("Temporada zerada. Placar e meta voltaram a zero.", ok) { repo.reiniciarTemporada() }
+
     override fun definirMeta(alvo: Int, premio: String, ok: () -> Unit) = executar("Meta da casa atualizada.", ok) { repo.definirMeta(alvo, premio) }
     fun resgatar(t: Temporada, ok: () -> Unit = {}) = executar("Prêmio resgatado. Aproveite!", ok) { repo.resgatarPremio(t) }
 

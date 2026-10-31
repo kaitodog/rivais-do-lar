@@ -60,6 +60,8 @@ import com.rivaisdolar.app.domain.instanteOuNull
 import com.rivaisdolar.app.domain.plural
 import com.rivaisdolar.app.domain.pt
 import com.rivaisdolar.app.domain.relativo
+import com.rivaisdolar.app.ui.juice.EventoJuice
+import com.rivaisdolar.app.ui.juice.LocalJuice
 import com.rivaisdolar.app.ui.components.BotaoCapsula
 import com.rivaisdolar.app.ui.components.BotaoTexto
 import com.rivaisdolar.app.ui.components.CabecalhoFolha
@@ -247,7 +249,7 @@ fun ColumnScope.FolhaConcluir(
     ocupado: Boolean,
     aoFechar: () -> Unit,
 ) {
-    val haptico = LocalHapticFeedback.current
+    val juice = LocalJuice.current
     val context = LocalContext.current
     val escopo = rememberCoroutineScope()
     var foto by remember(t.id) { mutableStateOf<ByteArray?>(null) }
@@ -256,7 +258,6 @@ fun ColumnScope.FolhaConcluir(
     val previa by produceState(initialValue = null as com.rivaisdolar.app.data.model.Previa?, t.id) { value = vm.previa(t) }
 
     val arquivoCamera = remember { File(context.cacheDir, "fotos").apply { mkdirs() }.resolve("camera.jpg") }
-    val uriCamera = remember { FileProvider.getUriForFile(context, "${context.packageName}.arquivos", arquivoCamera) }
     fun receber(uri: android.net.Uri) {
         preparando = true
         escopo.launch {
@@ -265,7 +266,20 @@ fun ColumnScope.FolhaConcluir(
         }
     }
     val galeria = rememberLauncherForActivityResult(ActivityResultContracts.PickVisualMedia()) { uri -> uri?.let(::receber) }
-    val camera = rememberLauncherForActivityResult(ActivityResultContracts.TakePicture()) { ok -> if (ok) receber(uriCamera) }
+    var uriCamera by remember { mutableStateOf<android.net.Uri?>(null) }
+    val camera = rememberLauncherForActivityResult(ActivityResultContracts.TakePicture()) { ok ->
+        val uri = uriCamera
+        if (ok && uri != null) receber(uri)
+    }
+    // O URI do FileProvider só é resolvido no toque: criar na composição quebrava em contextos
+    // onde o cache do app e o provider não compartilham a mesma raiz (Robolectric, por exemplo).
+    fun abrirCamera() {
+        val uri = runCatching {
+            FileProvider.getUriForFile(context, "${context.packageName}.arquivos", arquivoCamera)
+        }.getOrNull() ?: return
+        uriCamera = uri
+        camera.launch(uri)
+    }
 
     CabecalhoFolha(t.titulo, aoFechar)
     FotoMoldura(imagem, altura = if (imagem != null) 180 else 118) {
@@ -275,7 +289,7 @@ fun ColumnScope.FolhaConcluir(
         if (preparando) {
             Texto("Preparando a foto…", Tipo.pequenoSecundario)
         } else {
-            BotaoTexto(if (imagem == null) "Tirar foto do depois" else "Tirar outra", { camera.launch(uriCamera) }, cor = Cores.TextoSecundario)
+            BotaoTexto(if (imagem == null) "Tirar foto do depois" else "Tirar outra", { abrirCamera() }, cor = Cores.TextoSecundario)
             BotaoTexto("Galeria", { galeria.launch(PickVisualMediaRequest(ActivityResultContracts.PickVisualMedia.ImageOnly)) }, cor = Cores.TextoSecundario)
             if (imagem != null) BotaoTexto("Sem foto", { foto = null }, cor = Cores.TextoSecundario)
         }
@@ -298,7 +312,7 @@ fun ColumnScope.FolhaConcluir(
         "Enviar pra validar",
         {
             vm.concluir(t, foto) {
-                haptico.performHapticFeedback(HapticFeedbackType.Confirm)
+                juice.disparar(EventoJuice.Enviado)
                 aoFechar()
             }
         },
@@ -325,6 +339,7 @@ fun ColumnScope.FolhaValidar(
     aoFechar: () -> Unit,
 ) {
     val haptico = LocalHapticFeedback.current
+    val juice = LocalJuice.current
     var contestando by remember(r.id) { mutableStateOf(false) }
     var comentario by remember(r.id) { mutableStateOf("") }
     val restantes = vm.contestacoesRestantes()
@@ -351,7 +366,7 @@ fun ColumnScope.FolhaValidar(
             "Validar",
             {
                 vm.validar(r) {
-                    haptico.performHapticFeedback(HapticFeedbackType.Confirm)
+                    juice.disparar(EventoJuice.Validado)
                     aoFechar()
                 }
             },
@@ -503,8 +518,8 @@ fun ColumnScope.FolhaUsarCarta(carta: Carta, s: CasaSnapshot, agora: Instant, vm
     val tipo = TipoCarta.de(carta.tipo) ?: return
     var alvo by remember(carta.id) { mutableStateOf<String?>(null) }
     var alvo2 by remember(carta.id) { mutableStateOf<String?>(null) }
-    val haptico = LocalHapticFeedback.current
-    val usar = { vm.usarCarta(carta, alvo, alvo2) { haptico.performHapticFeedback(HapticFeedbackType.Confirm); aoFechar() } }
+    val juice = LocalJuice.current
+    val usar = { vm.usarCarta(carta, alvo, alvo2) { juice.disparar(EventoJuice.Carta); aoFechar() } }
 
     CabecalhoFolha(tipo.nome, aoFechar)
     Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.Center, verticalAlignment = Alignment.CenterVertically) {

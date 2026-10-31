@@ -63,6 +63,7 @@ private sealed interface Edicao {
     data object Nome : Edicao
     data object NomeCasa : Edicao
     data object Aposta : Edicao
+    data object Resetar : Edicao
     data object SairCasa : Edicao
 }
 
@@ -186,6 +187,14 @@ fun CasaTela(
                             aoTocar = { aoUltimaTemporada(t.id) },
                         )
                     }
+                    Divisoria()
+                    Linha(
+                        titulo = "Resetar temporada",
+                        subtitulo = "Zera o placar e a meta da temporada atual",
+                        inicio = { IconeTarefa("restart_alt", cor = Cores.Alerta) },
+                        seta = true,
+                        aoTocar = { edicao = Edicao.Resetar },
+                    )
                 }
             }
 
@@ -275,6 +284,31 @@ fun CasaTela(
                     }
                     Edicao.Aposta -> EditarTexto("Aposta da semana", s.temporada?.aposta.orEmpty(), "Ex.: vencedor escolhe o restaurante", 120, ocupado, fechar) {
                         vm.definirAposta(it, fechar)
+                    }
+                    Edicao.Resetar -> {
+                        CabecalhoFolha("Resetar a temporada?", fechar)
+                        Texto(
+                            "Isso zera o placar e a meta da Temporada ${s.temporada?.numero ?: ""}. " +
+                                "Conclusões aguardando validação são canceladas e as tarefas voltam para a fila. " +
+                                "Tarefas já validadas, moedas, XP, sequência e cartas continuam.",
+                            Tipo.pequenoSecundario,
+                            Modifier.fillMaxWidth(),
+                            alinhamento = TextAlign.Center,
+                        )
+                        val placar = s.jogadores.joinToString("  ×  ") { "${it.nome} ${s.pontos(it.userId).pt()}" }
+                        Texto(
+                            "Placar agora: $placar",
+                            Tipo.pequeno,
+                            Modifier.fillMaxWidth(),
+                            alinhamento = TextAlign.Center,
+                        )
+                        BotaoCapsula(
+                            "Resetar temporada",
+                            { vm.reiniciarTemporada(fechar) },
+                            carregando = ocupado,
+                            tinta = Cores.Alerta,
+                        )
+                        BotaoTexto("Cancelar", fechar, Modifier.align(Alignment.CenterHorizontally))
                     }
                     Edicao.SairCasa -> {
                         CabecalhoFolha("Sair da casa?", fechar)

@@ -21,6 +21,10 @@ import androidx.compose.ui.input.nestedscroll.NestedScrollConnection
 import androidx.compose.ui.input.nestedscroll.NestedScrollSource
 import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.zIndex
+import com.rivaisdolar.app.ui.juice.CanvasParticulas
+import com.rivaisdolar.app.ui.juice.EventoJuice
+import com.rivaisdolar.app.ui.juice.LocalJuice
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.rivaisdolar.app.ui.cartas.CartasTela
 import com.rivaisdolar.app.ui.components.Aba
@@ -77,6 +81,7 @@ fun PrincipalTela(
     val ocupado by vm.ocupado.collectAsStateWithLifecycle()
     val aviso by vm.aviso.collectAsStateWithLifecycle()
     val agora by rememberAgora()
+    val juice = LocalJuice.current
 
     var aba by rememberSaveable { mutableStateOf(Aba.Placar) }
     var folha by remember { mutableStateOf<Folha?>(null) }
@@ -152,7 +157,10 @@ fun PrincipalTela(
                     lista = listas.getValue(Aba.Cartas),
                     ocupado = ocupado,
                     aoUsar = { folha = Folha.UsarCarta(it.id) },
-                    aoComprar = { vm.comprar(it) },
+                    aoComprar = {
+                        vm.comprar(it)
+                        juice.disparar(EventoJuice.Compra)
+                    },
                 )
             }
         }
@@ -223,6 +231,9 @@ fun PrincipalTela(
                 }
             }
         }
+
+        // Partículas acima do conteúdo e dos sheets; o aviso fica por cima de tudo.
+        CanvasParticulas(juice.sistema, Modifier.fillMaxSize().zIndex(20f))
 
         Aviso(aviso, vm::limparAviso, Modifier.align(Alignment.TopCenter))
     }

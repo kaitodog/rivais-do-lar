@@ -67,6 +67,9 @@ import com.rivaisdolar.app.ui.components.FolhaVidro
 import com.rivaisdolar.app.ui.components.LocalHaze
 import com.rivaisdolar.app.ui.components.Simbolo
 import com.rivaisdolar.app.ui.components.Texto
+import com.rivaisdolar.app.ui.juice.CanvasParticulas
+import com.rivaisdolar.app.ui.juice.EventoJuice
+import com.rivaisdolar.app.ui.juice.LocalJuice
 import com.rivaisdolar.app.ui.principal.JogoViewModel
 import com.rivaisdolar.app.ui.theme.Cores
 import com.rivaisdolar.app.ui.theme.LocalReduzirMovimento
@@ -84,11 +87,16 @@ fun FimTemporadaTela(vm: JogoViewModel, temporadaId: String, aoFechar: () -> Uni
     val snapshot by vm.snapshot.collectAsStateWithLifecycle()
     val ocupado by vm.ocupado.collectAsStateWithLifecycle()
     val aviso by vm.aviso.collectAsStateWithLifecycle()
+    val juice = LocalJuice.current
     val s = snapshot ?: return
     val t = s.ultimaEncerrada?.takeIf { it.id == temporadaId } ?: s.ultimaEncerrada
     if (t == null) {
         LaunchedEffect(Unit) { aoFechar() }
         return
+    }
+    val venceu = t.vencedor != null && t.vencedor == s.meuId
+    LaunchedEffect(t.id) {
+        juice.disparar(if (venceu) EventoJuice.Vitoria else EventoJuice.Derrota)
     }
     Box(Modifier.fillMaxSize()) {
         FimTemporadaConteudo(
@@ -102,6 +110,7 @@ fun FimTemporadaTela(vm: JogoViewModel, temporadaId: String, aoFechar: () -> Uni
                 aoFechar()
             },
         )
+        CanvasParticulas(juice.sistema, Modifier.fillMaxSize())
         Aviso(aviso, vm::limparAviso, Modifier.align(Alignment.TopCenter))
     }
 }
@@ -182,7 +191,6 @@ private fun Comemoracao(t: Temporada, s: CasaSnapshot, resultado: Resultado) {
     val reduzir = LocalReduzirMovimento.current
     val giro = rememberInfiniteTransition(label = "raios")
     val angulo by giro.animateFloat(0f, 360f, infiniteRepeatable(tween(20_000, easing = LinearEasing)), label = "angulo")
-    val queda by giro.animateFloat(0f, 1f, infiniteRepeatable(tween(6_000, easing = LinearEasing)), label = "confete")
     val ouro = resultado == Resultado.Vitoria
 
     val eu = s.pontos(s.meuId)
@@ -200,7 +208,6 @@ private fun Comemoracao(t: Temporada, s: CasaSnapshot, resultado: Resultado) {
             Canvas(Modifier.size(290.dp).padding(top = 0.dp)) {
                 rotate(if (reduzir) 0f else angulo) { raios() }
             }
-            Canvas(Modifier.fillMaxWidth().height(250.dp)) { confete(if (reduzir) 0f else queda) }
         }
         Column(Modifier.padding(top = 50.dp), horizontalAlignment = Alignment.CenterHorizontally, verticalArrangement = Arrangement.spacedBy(6.dp)) {
             Canvas(Modifier.size(100.dp)) { trofeu(ouro) }
@@ -236,29 +243,6 @@ private fun DrawScope.raios() {
             ),
         )
         a += fatia * 2
-    }
-}
-
-private val pedacos = listOf(
-    Triple(0.12f, 0.16f, 25f), Triple(0.22f, 0.44f, -30f), Triple(0.86f, 0.22f, 50f),
-    Triple(0.76f, 0.52f, -15f), Triple(0.42f, 0.06f, 70f), Triple(0.62f, 0.12f, -60f),
-    Triple(0.06f, 0.62f, 10f), Triple(0.93f, 0.70f, 35f), Triple(0.33f, 0.80f, -45f),
-)
-private val coresConfete = listOf(Color.White, Cores.Ouro, Color(0xFFF6DE8D))
-
-/** Confete branco e dourado caindo devagar. */
-private fun DrawScope.confete(progresso: Float) {
-    pedacos.forEachIndexed { i, (x, y, rot) ->
-        val dy = ((y + progresso * 0.35f + i * 0.04f) % 1f) * size.height
-        val px = x * size.width + sin((progresso * 2 * PI + i).toFloat()) * 6.dp.toPx()
-        rotate(rot + progresso * 90f * (if (i % 2 == 0) 1 else -1), pivot = Offset(px, dy)) {
-            drawRoundRect(
-                coresConfete[i % coresConfete.size],
-                topLeft = Offset(px, dy),
-                size = Size(5.dp.toPx(), 9.dp.toPx()),
-                cornerRadius = androidx.compose.ui.geometry.CornerRadius(2.dp.toPx()),
-            )
-        }
     }
 }
 
